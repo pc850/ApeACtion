@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { Video } from '@/context/VideoContext';
@@ -12,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import { CoinIcon, SendIcon } from 'lucide-react';
+import { CoinsIcon, SendIcon } from 'lucide-react';
 
 interface ChatInterfaceProps {
   video: Video;
@@ -26,7 +25,6 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  // Load chat history
   useEffect(() => {
     const loadChatHistory = async () => {
       setIsLoading(true);
@@ -43,7 +41,6 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
     loadChatHistory();
   }, [video.creatorId]);
   
-  // Scroll to bottom when chat history changes
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
@@ -53,21 +50,17 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
   const handleSendMessage = async () => {
     if (!message.trim()) return;
     
-    // Spend tokens to send message
     const canSend = spendTokens(video.chatCost);
     if (!canSend) return;
     
     setIsLoading(true);
     
     try {
-      // Add user message to chat
       const userMessage = await sendChatMessage(video.creatorId, message);
       setChatHistory(prev => [...prev, userMessage]);
       
-      // Clear input
       setMessage('');
       
-      // Simulate creator response
       const creatorMessage = await simulateCreatorResponse(video.creatorId);
       setChatHistory(prev => [...prev, creatorMessage]);
     } catch (error) {
@@ -77,7 +70,6 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
     }
   };
   
-  // Format timestamp
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString([], { 
       hour: '2-digit', 
@@ -87,7 +79,6 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
   
   return (
     <div className="flex flex-col h-full">
-      {/* Chat info bar */}
       <div className="p-4 border-b bg-card">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden">
@@ -114,7 +105,6 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
         </div>
       </div>
       
-      {/* Chat messages */}
       <ScrollArea 
         className="flex-1 p-4" 
         ref={scrollAreaRef as React.RefObject<HTMLDivElement>}
@@ -158,11 +148,10 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
         </div>
       </ScrollArea>
       
-      {/* Message input */}
       <div className="p-4 border-t bg-card">
         <div className="flex items-center gap-2">
           <div className="flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
-            <CoinIcon className="w-4 h-4 mr-1" />
+            <CoinsIcon className="w-4 h-4 mr-1" />
             <span>{video.chatCost} per message</span>
           </div>
           

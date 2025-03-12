@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { CoinIcon, UserIcon, HistoryIcon, SettingsIcon } from 'lucide-react';
+import { CoinsIcon, UserIcon, HistoryIcon, SettingsIcon } from 'lucide-react';
 
 const Profile = () => {
   const { tokens } = useTokens();
@@ -68,7 +67,7 @@ const Profile = () => {
             <CardContent>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <CoinIcon className="w-6 h-6 text-yellow-400" />
+                  <CoinsIcon className="w-6 h-6 text-yellow-400" />
                   <span className="text-3xl font-bold">{tokens}</span>
                 </div>
                 <Button variant="outline">

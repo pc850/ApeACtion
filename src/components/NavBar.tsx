@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import TokenCounter from './TokenCounter';
 import { 
   HomeIcon, 
-  CoinIcon, 
+  CoinsIcon, 
   VideoIcon, 
   UserIcon, 
   MenuIcon,
@@ -19,7 +18,7 @@ const NavBar = () => {
   
   const navItems = [
     { path: '/', label: 'Home', icon: HomeIcon },
-    { path: '/earn', label: 'Earn', icon: CoinIcon },
+    { path: '/earn', label: 'Earn', icon: CoinsIcon },
     { path: '/feed', label: 'Feed', icon: VideoIcon },
     { path: '/profile', label: 'Profile', icon: UserIcon },
   ];
@@ -33,7 +32,6 @@ const NavBar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
-  // Close mobile menu when changing routes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
@@ -49,7 +47,6 @@ const NavBar = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link 
             to="/" 
             className="text-xl font-bold text-primary tracking-tight flex items-center"
@@ -57,7 +54,6 @@ const NavBar = () => {
             <span>ClickNEarn</span>
           </Link>
           
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             {navItems.map((item) => (
               <Link
@@ -76,10 +72,8 @@ const NavBar = () => {
             ))}
           </nav>
           
-          {/* Token Counter */}
           <TokenCounter className="hidden md:flex" />
           
-          {/* Mobile Menu Button */}
           <button 
             className="md:hidden text-foreground"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -94,7 +88,6 @@ const NavBar = () => {
         </div>
       </div>
       
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-background/95 backdrop-blur-lg border-t border-border">
           <div className="container mx-auto px-4 py-3">

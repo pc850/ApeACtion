@@ -1,11 +1,10 @@
-
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import TokenCounter from '@/components/TokenCounter';
 import { useTokens } from '@/context/TokenContext';
 import { motion } from 'framer-motion';
 import { 
-  CoinIcon, 
+  CoinsIcon, 
   VideoIcon, 
   ArrowRightIcon, 
   UserIcon 
@@ -42,7 +41,7 @@ const Index = () => {
           transition={{ delay: 0.1 }}
         >
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <CoinIcon className="w-8 h-8 text-primary" />
+            <CoinsIcon className="w-8 h-8 text-primary" />
           </div>
           <h2 className="text-xl font-semibold mb-2">Click to Earn</h2>
           <p className="text-muted-foreground mb-4">
@@ -108,7 +107,7 @@ const Index = () => {
       <div className="mt-12 text-center">
         <p className="text-lg mb-2">Your current balance:</p>
         <div className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
-          <CoinIcon className="w-6 h-6" />
+          <CoinsIcon className="w-6 h-6" />
           {tokens} Tokens
         </div>
       </div>

@@ -1,7 +1,7 @@
 
 import { useTokens } from '@/context/TokenContext';
 import { cn } from '@/lib/utils';
-import { CoinIcon } from 'lucide-react';
+import { CoinsIcon } from 'lucide-react';
 
 interface TokenCounterProps {
   className?: string;
@@ -21,7 +21,7 @@ const TokenCounter = ({ className, variant = 'default' }: TokenCounterProps) => 
         className
       )}
     >
-      <CoinIcon className="w-5 h-5 text-yellow-400 animate-pulse-soft" />
+      <CoinsIcon className="w-5 h-5 text-yellow-400 animate-pulse-soft" />
       <span className={cn(
         "font-semibold",
         variant === 'default' ? "text-white" : "text-primary"
