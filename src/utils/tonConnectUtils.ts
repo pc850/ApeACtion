@@ -15,4 +15,3 @@ export const getWalletAddress = (wallet: any): string | null => {
   }
   return null;
 };
-
