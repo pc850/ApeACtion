@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/components/ui/use-toast";
 import { Session } from '@supabase/supabase-js';
 import { useWallet } from '@/hooks/useWallet';
-import { tonConnectUI, getWalletAddress, getTelegramUsername } from '@/utils/tonConnectUtils';
+import { tonConnectUI, getWalletAddress, getTelegramInfo } from '@/utils/tonConnectUtils';
 import { signInWithTON, signOut } from '@/services/authService';
 
 type AuthContextType = {
@@ -54,17 +54,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     tonConnectUI.onStatusChange(async (wallet) => {
       console.log("Wallet status changed:", wallet);
       const address = getWalletAddress(wallet);
-      const username = getTelegramUsername(wallet);
+      const telegramData = getTelegramInfo(wallet);
       
-      if (username) {
-        setTelegramUsername(username);
+      if (telegramData.username) {
+        setTelegramUsername(telegramData.username);
       }
       
       if (address) {
         // If wallet is connected but no session exists, create one
         if (!session) {
           try {
-            await signInWithTON(address, username);
+            await signInWithTON(address, telegramData.id, telegramData.username);
           } catch (error) {
             console.error("Error signing in with TON:", error);
           }

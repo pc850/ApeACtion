@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { UserRejectsError } from '@tonconnect/ui';
 import { toast } from "@/components/ui/use-toast";
-import { tonConnectUI, getWalletAddress, getTelegramUsername } from '@/utils/tonConnectUtils';
+import { tonConnectUI, getWalletAddress, getTelegramInfo } from '@/utils/tonConnectUtils';
 
 export const useWallet = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -17,14 +17,14 @@ export const useWallet = () => {
         if (wallets.length > 0) {
           console.log("Wallet already connected:", wallets[0]);
           const address = getWalletAddress(wallets[0]);
-          const username = getTelegramUsername(wallets[0]);
+          const telegramData = getTelegramInfo(wallets[0]);
           
           if (address) {
             setWalletAddress(address);
           }
           
-          if (username) {
-            setTelegramUsername(username);
+          if (telegramData.username) {
+            setTelegramUsername(telegramData.username);
           }
         }
       } catch (error) {
@@ -38,12 +38,12 @@ export const useWallet = () => {
     const unsubscribe = tonConnectUI.onStatusChange((wallet) => {
       if (wallet) {
         const address = getWalletAddress(wallet);
-        const username = getTelegramUsername(wallet);
+        const telegramData = getTelegramInfo(wallet);
         
         setWalletAddress(address);
-        setTelegramUsername(username);
+        setTelegramUsername(telegramData.username || null);
         
-        console.log("Wallet connected:", { address, username });
+        console.log("Wallet connected:", { address, telegramUsername: telegramData.username });
       } else {
         setWalletAddress(null);
         setTelegramUsername(null);

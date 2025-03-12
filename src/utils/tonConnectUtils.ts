@@ -10,7 +10,7 @@ export const getManifestData = async () => {
       .select('*')
       .order('id', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     
     if (error) {
       throw error;
@@ -25,7 +25,7 @@ export const getManifestData = async () => {
 
 // Initialize TonConnect with proper configuration
 export const tonConnectUI = new TonConnectUI({
-  manifestUrl: `https://kkddzgpenchcqjxyehep.supabase.co/manifest.json`,
+  manifestUrl: 'https://kkddzgpenchcqjxyehep.supabase.co/manifest.json' as `${string}://${string}`,
   actionsConfiguration: {
     twaReturnUrl: window.location.origin,
   },
@@ -83,9 +83,23 @@ export const storeWalletConnection = async (
   telegramUsername?: string
 ) => {
   try {
+    // Generate a UUID for the new record if needed
+    const { data: existingConnection, error: fetchError } = await supabase
+      .from('wallet_connections')
+      .select('id')
+      .eq('wallet_address', walletAddress)
+      .maybeSingle();
+    
+    if (fetchError) {
+      console.error('Error checking existing wallet connection:', fetchError);
+    }
+
+    const connectionId = existingConnection?.id || crypto.randomUUID();
+    
     const { error } = await supabase
       .from('wallet_connections')
       .upsert({
+        id: connectionId,
         wallet_address: walletAddress,
         telegram_id: telegramId,
         username: telegramUsername,
@@ -100,4 +114,3 @@ export const storeWalletConnection = async (
     console.error('Error in storeWalletConnection:', error);
   }
 };
-
