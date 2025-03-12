@@ -7,14 +7,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { WalletIcon } from 'lucide-react';
 import { TokenProvider } from '@/context/TokenContext';
 import TokenCounter from '@/components/TokenCounter';
+import { toast } from "@/components/ui/use-toast";
 
 const Auth = () => {
-  const { connectWallet, isWalletConnected, isLoading } = useAuth();
+  const { connectWallet, isWalletConnected, isLoading, session } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
-    // If user is already connected, redirect to home
-    if (isWalletConnected && !isLoading) {
+    // If user is already authenticated, redirect to home
+    if (isWalletConnected && session) {
       navigate('/');
     }
     
@@ -22,12 +23,25 @@ const Auth = () => {
     document.title = 'Sign In | ClickNEarn';
     
     // Log for debugging
-    console.log('Auth page - isWalletConnected:', isWalletConnected, 'isLoading:', isLoading);
-  }, [isWalletConnected, navigate, isLoading]);
+    console.log('Auth page - Auth state:', { 
+      isWalletConnected, 
+      isLoading, 
+      hasSession: !!session 
+    });
+  }, [isWalletConnected, navigate, isLoading, session]);
 
   const handleConnectWallet = async () => {
-    console.log('Connect wallet button clicked');
-    await connectWallet();
+    try {
+      console.log('Connect wallet button clicked');
+      await connectWallet();
+    } catch (error) {
+      console.error('Wallet connection error:', error);
+      toast({
+        title: "Connection Failed",
+        description: "Failed to connect your wallet. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
