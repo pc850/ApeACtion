@@ -1,4 +1,3 @@
-
 // In a real application, this would contain actual API calls
 // For now, we'll use simulated API functions
 
@@ -70,17 +69,14 @@ export const simulateCreatorResponse = async (
   creatorId: string,
   userMessage: string
 ): Promise<ChatMessage> => {
-  // Simulate API call with variable timing to feel more realistic
   await delay(1000 + Math.random() * 2000);
   
-  // Simple keyword detection for more contextual responses
   const lowerCaseMessage = userMessage.toLowerCase();
   let response = '';
   
-  // Create personalized responses based on message content
   if (lowerCaseMessage.includes('hello') || lowerCaseMessage.includes('hi') || lowerCaseMessage.includes('hey')) {
     response = "Hey there! So glad you stopped by my stream today! How are you doing?";
-  } else if (lowerCaseMessage.includes('how are you') || lowerCaseMessage.includes('how's it going') || lowerCaseMessage.includes('how are things')) {
+  } else if (lowerCaseMessage.includes('how are you') || lowerCaseMessage.includes("how are you doing") || lowerCaseMessage.includes('how are things')) {
     response = "I'm doing fantastic today! Just really enjoying this stream and chatting with awesome viewers like you. How about yourself?";
   } else if (lowerCaseMessage.includes('what') && (lowerCaseMessage.includes('doing') || lowerCaseMessage.includes('up to'))) {
     response = "Right now I'm just streaming and chatting with my viewers! I might do some gaming later, or maybe a Q&A session. Any preferences?";
@@ -103,7 +99,6 @@ export const simulateCreatorResponse = async (
   } else if (lowerCaseMessage.length < 10) {
     response = "I'd love to hear more! What's on your mind today?";
   } else {
-    // Default responses for when no keywords match
     const defaultResponses = [
       "That's really interesting! Tell me more about it.",
       "I appreciate you sharing that with me. What else is happening in your world?",
@@ -116,7 +111,6 @@ export const simulateCreatorResponse = async (
     response = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
   }
   
-  // Add some personality to responses
   const personalityTouches = [
     "",
     " 💕",
@@ -132,7 +126,6 @@ export const simulateCreatorResponse = async (
     response += personalityTouches[Math.floor(Math.random() * personalityTouches.length)];
   }
   
-  // Return simulated creator response
   return {
     id: `creator-${Date.now()}`,
     senderId: creatorId,
