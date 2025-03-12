@@ -3,6 +3,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { createFloatingNumber } from '@/lib/animations';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
+
+// Position interface for the breast target
+interface Position {
+  x: number;
+  y: number;
+}
 
 const ClickToEarn = () => {
   const { addTokens } = useTokens();
@@ -10,7 +17,17 @@ const ClickToEarn = () => {
   const [consecutiveClicks, setConsecutiveClicks] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const mainCircleRef = useRef<HTMLDivElement>(null);
+
+  // Game state
+  const [roundActive, setRoundActive] = useState(false);
+  const [targetsHit, setTargetsHit] = useState(0);
+  const [targetPosition, setTargetPosition] = useState<Position>({ x: 0, y: 0 });
+  const [showTarget, setShowTarget] = useState(false);
+  const [roundScore, setRoundScore] = useState(0);
   
+  const MAX_TARGETS = 5;
+
   // Reset consecutive clicks if user hasn't clicked for a while
   useEffect(() => {
     const resetTimer = setTimeout(() => {
@@ -21,29 +38,113 @@ const ClickToEarn = () => {
     
     return () => clearTimeout(resetTimer);
   }, [lastClickTime, consecutiveClicks]);
-  
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Animation effect
-    setScale(0.95);
-    setTimeout(() => setScale(1), 150);
+
+  // Generate a random position around the main circle
+  const generateRandomPosition = () => {
+    if (!mainCircleRef.current || !containerRef.current) return;
+
+    const mainCircle = mainCircleRef.current.getBoundingClientRect();
+    const container = containerRef.current.getBoundingClientRect();
     
-    // Calculate bonus based on click speed
+    // Circle properties
+    const centerX = mainCircle.width / 2;
+    const centerY = mainCircle.height / 2;
+    const radius = mainCircle.width / 2;
+    
+    // Generate a random angle
+    const angle = Math.random() * 2 * Math.PI;
+    
+    // Random distance from the edge of the main circle (between 0 and 60px)
+    const distance = radius + 20 + Math.random() * 60;
+    
+    // Calculate position
+    const x = centerX + distance * Math.cos(angle);
+    const y = centerY + distance * Math.sin(angle);
+    
+    // Make sure target is within the container
+    const targetSize = 50; // size of target
+    const boundedX = Math.min(Math.max(targetSize/2, x), container.width - targetSize/2);
+    const boundedY = Math.min(Math.max(targetSize/2, y), container.height - targetSize/2);
+    
+    return { x: boundedX, y: boundedY };
+  };
+  
+  // Start a new round of the game
+  const startRound = () => {
+    setRoundActive(true);
+    setTargetsHit(0);
+    setRoundScore(0);
+    showNextTarget();
+  };
+  
+  // Show the next target (breast)
+  const showNextTarget = () => {
+    const newPosition = generateRandomPosition();
+    if (newPosition) {
+      setTargetPosition(newPosition);
+      setShowTarget(true);
+    }
+  };
+  
+  // Handle clicking on the breast target
+  const handleTargetClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Update scores
     const now = Date.now();
     const timeSinceLastClick = now - lastClickTime;
     setLastClickTime(now);
     
-    let tokensToAdd = 1; // Base amount
+    let tokensEarned = 2; // Base amount for hitting the target
     
-    // Add bonus tokens for consecutive rapid clicks
+    // Add bonus tokens for consecutive rapid hits
     if (timeSinceLastClick < 500) {
       setConsecutiveClicks(prev => prev + 1);
       
-      if (consecutiveClicks >= 5) {
-        tokensToAdd += Math.min(Math.floor(consecutiveClicks / 5), 5);
+      if (consecutiveClicks >= 3) {
+        tokensEarned += Math.min(Math.floor(consecutiveClicks / 3), 5);
       }
     } else {
       setConsecutiveClicks(1);
     }
+    
+    // Create floating number animation
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      createFloatingNumber(x, y, tokensEarned, containerRef.current);
+    }
+    
+    // Update game state
+    setRoundScore(prev => prev + tokensEarned);
+    addTokens(tokensEarned);
+    setTargetsHit(prev => prev + 1);
+    setShowTarget(false);
+    
+    // Check if round is complete
+    if (targetsHit + 1 >= MAX_TARGETS) {
+      // Round complete!
+      setTimeout(() => {
+        setRoundActive(false);
+      }, 500);
+    } else {
+      // Show next target after a short delay
+      setTimeout(showNextTarget, 300);
+    }
+  };
+  
+  // Handle clicking on the main circle (base click)
+  const handleMainCircleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (roundActive) return; // Ignore clicks during active round
+    
+    // Animation effect
+    setScale(0.95);
+    setTimeout(() => setScale(1), 150);
+    
+    // Calculate base tokens
+    let tokensToAdd = 1; // Base amount
     
     // Create floating number animation at click position
     if (containerRef.current) {
@@ -54,14 +155,15 @@ const ClickToEarn = () => {
       createFloatingNumber(x, y, tokensToAdd, containerRef.current);
     }
     
-    // Add tokens
+    // Add tokens and start a new round
     addTokens(tokensToAdd);
+    startRound();
   };
   
   return (
     <div 
       ref={containerRef}
-      className="relative flex flex-col items-center justify-center w-full max-w-md mx-auto"
+      className="relative flex flex-col items-center justify-center w-full max-w-lg mx-auto h-[600px]"
     >
       <div className="text-center mb-8">
         <span className="inline-block text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary mb-2">
@@ -69,15 +171,32 @@ const ClickToEarn = () => {
         </span>
         <h1 className="text-3xl font-bold mb-1">Click & Earn Tokens</h1>
         <p className="text-muted-foreground">
-          Tap the character below to earn tokens!
+          {roundActive 
+            ? "Click the breast to earn tokens!" 
+            : "Tap the character below to start!"
+          }
         </p>
       </div>
       
+      {/* Game progress */}
+      {roundActive && (
+        <div className="w-full max-w-xs mb-4">
+          <div className="flex justify-between text-sm mb-1">
+            <span>Progress</span>
+            <span>{targetsHit}/{MAX_TARGETS}</span>
+          </div>
+          <Progress value={(targetsHit / MAX_TARGETS) * 100} />
+        </div>
+      )}
+      
+      {/* Main clickable circle */}
       <div
-        onClick={handleClick}
+        ref={mainCircleRef}
+        onClick={handleMainCircleClick}
         className={cn(
           "relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden cursor-pointer",
-          "clickable-element shadow-xl"
+          "clickable-element shadow-xl",
+          roundActive && "pointer-events-none opacity-90"
         )}
         style={{ 
           transform: `scale(${scale})`,
@@ -98,13 +217,38 @@ const ClickToEarn = () => {
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/30 to-transparent opacity-70 pointer-events-none" />
       </div>
       
+      {/* Breast Target */}
+      {showTarget && (
+        <div
+          onClick={handleTargetClick}
+          className="absolute w-12 h-12 rounded-full bg-[#FFDEE2] cursor-pointer hover:scale-105 transition-transform z-10 animate-pulse"
+          style={{
+            left: `${targetPosition.x}px`,
+            top: `${targetPosition.y}px`,
+            transform: 'translate(-50%, -50%)',
+            boxShadow: '0 0 10px rgba(217, 70, 239, 0.5)',
+          }}
+        >
+          {/* Inner circle for nipple effect */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#D946EF]" />
+        </div>
+      )}
+      
       <div className="mt-8 text-center text-lg">
         <p>
           <span className="font-semibold text-xl">
-            Tap faster for bonus tokens!
+            {roundActive 
+              ? "Click the breast target!" 
+              : "Tap to start a round!"
+            }
           </span>
         </p>
-        {consecutiveClicks > 1 && (
+        {roundActive && roundScore > 0 && (
+          <p className="text-primary font-medium mt-2">
+            Round score: {roundScore} tokens
+          </p>
+        )}
+        {!roundActive && consecutiveClicks > 1 && (
           <p className="text-primary font-medium mt-2">
             {consecutiveClicks} consecutive clicks!
           </p>
