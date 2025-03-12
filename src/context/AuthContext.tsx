@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { TonConnectUI, UserRejectsError, Wallet } from '@tonconnect/ui';
+import { TonConnectUI, UserRejectsError, WalletInfo } from '@tonconnect/ui';
 import { toast } from "@/components/ui/use-toast";
 import { Session } from '@supabase/supabase-js';
 
@@ -47,9 +47,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const wallets = await tonConnectUI.getWallets();
       if (wallets.length > 0) {
         console.log("Wallet already connected:", wallets[0]);
-        // Access wallet address correctly based on the Wallet type structure
-        if ((wallets[0] as Wallet).account?.address) {
-          setWalletAddress((wallets[0] as Wallet).account.address);
+        // Access wallet address safely based on the wallet type
+        const wallet = wallets[0];
+        if ('account' in wallet && wallet.account?.address) {
+          setWalletAddress(wallet.account.address);
         }
       }
     };
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Listen for wallet connection changes
     tonConnectUI.onStatusChange(async (wallet) => {
       console.log("Wallet status changed:", wallet);
-      if (wallet) {
+      if (wallet && 'account' in wallet) {
         setWalletAddress(wallet.account.address);
         // If wallet is connected but no session exists, create one
         if (!session) {
@@ -95,35 +96,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithTON = async (address: string) => {
     try {
       console.log("Signing in with address:", address);
-      // Use a custom token from Supabase to authenticate with the TON address
-      // In a real implementation, you'd want to verify ownership of the address
-      const { error } = await supabase.auth.signInWithPassword({
-        email: `${address}@ton.wallet`, // Using a deterministic email
-        password: address, // Using the address as password (this is simplified)
-      });
       
-      if (error) {
-        console.log("Sign in error:", error.message);
-        // If user doesn't exist, create a new account
-        if (error.message.includes("Invalid login credentials")) {
-          console.log("Creating new user");
-          const { error: signUpError } = await supabase.auth.signUp({
-            email: `${address}@ton.wallet`,
-            password: address,
-          });
-          
-          if (signUpError) {
-            throw signUpError;
-          } else {
-            // Try to sign in again after signup
-            await supabase.auth.signInWithPassword({
-              email: `${address}@ton.wallet`,
-              password: address,
-            });
-          }
-        } else {
-          throw error;
-        }
+      // Check if user exists first
+      const { data, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', `ton_${address}`)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error("Error checking for existing user:", checkError);
+      }
+      
+      // If user exists, sign in, otherwise sign up
+      if (data) {
+        console.log("User exists, signing in");
+        await signInExistingUser(address);
+      } else {
+        console.log("User doesn't exist, creating new account");
+        await signUpNewUser(address);
       }
       
       toast({
@@ -139,6 +130,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       throw error;
     }
+  };
+  
+  const signInExistingUser = async (address: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: `${address}@ton.wallet`,
+      password: address,
+    });
+    
+    if (error) {
+      console.error("Sign in error:", error);
+      throw error;
+    }
+  };
+  
+  const signUpNewUser = async (address: string) => {
+    const { error } = await supabase.auth.signUp({
+      email: `${address}@ton.wallet`,
+      password: address,
+      options: {
+        data: {
+          wallet_address: address,
+        }
+      }
+    });
+    
+    if (error) {
+      console.error("Sign up error:", error);
+      throw error;
+    }
+    
+    // After successful signup, sign in
+    await signInExistingUser(address);
   };
 
   const connectWallet = async () => {
