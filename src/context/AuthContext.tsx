@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { TonConnectUI, UserRejectsError } from '@tonconnect/ui';
@@ -7,7 +6,7 @@ import { Session } from '@supabase/supabase-js';
 
 // Initialize TonConnect with proper configuration
 const tonConnectUI = new TonConnectUI({
-  manifestUrl: 'https://raw.githubusercontent.com/ton-community/ton-connect-manifest/main/tonconnect-manifest.json',
+  manifestUrl: 'https://raw.githubusercontent.com/ton-community/ton-connect-manifest/main/tonconnect-manifest.json' as `${string}://${string}`,
   actionsConfiguration: {
     twaReturnUrl: window.location.origin,
   },
@@ -44,10 +43,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Check if wallet is already connected
     const initWallet = async () => {
-      const walletInfo = tonConnectUI.getWalletInfo();
-      if (walletInfo) {
-        console.log("Wallet already connected:", walletInfo);
-        setWalletAddress(walletInfo.account.address);
+      const wallets = await tonConnectUI.getWallets();
+      if (wallets.length > 0) {
+        console.log("Wallet already connected:", wallets[0]);
+        setWalletAddress(wallets[0].account.address);
       }
     };
 
