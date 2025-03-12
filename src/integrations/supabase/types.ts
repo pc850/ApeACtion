@@ -33,6 +33,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ton_config: {
+        Row: {
+          created_at: string | null
+          icon_url: string
+          id: number
+          name: string
+          privacy_policy_url: string
+          terms_of_use_url: string
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          icon_url: string
+          id?: number
+          name: string
+          privacy_policy_url: string
+          terms_of_use_url: string
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          icon_url?: string
+          id?: number
+          name?: string
+          privacy_policy_url?: string
+          terms_of_use_url?: string
+          url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
