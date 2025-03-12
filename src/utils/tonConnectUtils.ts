@@ -3,7 +3,7 @@ import { TonConnectUI } from '@tonconnect/ui';
 
 // Initialize TonConnect with proper configuration
 export const tonConnectUI = new TonConnectUI({
-  manifestUrl: 'https://raw.githubusercontent.com/ton-community/ton-connect-manifest/main/tonconnect-manifest.json' as `https://${string}`,
+  manifestUrl: 'https://kkddzgpenchcqjxyehep.supabase.co/storage/v1/object/public/ton/tonconnect-manifest.json',
   actionsConfiguration: {
     twaReturnUrl: window.location.origin,
   },
@@ -15,3 +15,4 @@ export const getWalletAddress = (wallet: any): string | null => {
   }
   return null;
 };
+
