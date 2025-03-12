@@ -50,9 +50,10 @@ export const tonConnectUI = new TonConnectUI({
     const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
     const manifestUrl = URL.createObjectURL(blob);
     
-    // Update the TonConnect UI configuration
-    tonConnectUI.updateConfig({
-      manifestUrl: manifestUrl
+    // The TypeScript definition doesn't include updateConfig
+    // But it's documented in the library, so we use a type assertion
+    (tonConnectUI as any).updateConfig({
+      manifestUrl
     });
     
     console.log('TON Connect manifest updated from database');
