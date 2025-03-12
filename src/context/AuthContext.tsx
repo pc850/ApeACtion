@@ -5,10 +5,12 @@ import { TonConnectUI, UserRejectsError } from '@tonconnect/ui';
 import { toast } from "@/components/ui/use-toast";
 import { Session } from '@supabase/supabase-js';
 
-// Initialize TonConnect
+// Initialize TonConnect with proper configuration
 const tonConnectUI = new TonConnectUI({
   manifestUrl: 'https://raw.githubusercontent.com/ton-community/ton-connect-manifest/main/tonconnect-manifest.json',
-  // Using a default value, can be customized later
+  actionsConfiguration: {
+    twaReturnUrl: window.location.origin,
+  },
 });
 
 type AuthContextType = {
@@ -30,9 +32,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Initialize session from Supabase
     const initSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      setIsLoading(false);
+      try {
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+      } catch (error) {
+        console.error("Error getting session:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Check if wallet is already connected
+    const initWallet = async () => {
+      const walletInfo = tonConnectUI.getWalletInfo();
+      if (walletInfo) {
+        console.log("Wallet already connected:", walletInfo);
+        setWalletAddress(walletInfo.account.address);
+      }
     };
 
     // Listen for auth state changes
@@ -44,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Listen for wallet connection changes
     tonConnectUI.onStatusChange(async (wallet) => {
+      console.log("Wallet status changed:", wallet);
       if (wallet) {
         setWalletAddress(wallet.account.address);
         // If wallet is connected but no session exists, create one
@@ -64,6 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     initSession();
+    initWallet();
 
     return () => {
       subscription.unsubscribe();
@@ -73,6 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Sign in with TON wallet
   const signInWithTON = async (address: string) => {
     try {
+      console.log("Signing in with address:", address);
       // Use a custom token from Supabase to authenticate with the TON address
       // In a real implementation, you'd want to verify ownership of the address
       const { error } = await supabase.auth.signInWithPassword({
@@ -81,8 +100,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       if (error) {
+        console.log("Sign in error:", error.message);
         // If user doesn't exist, create a new account
         if (error.message.includes("Invalid login credentials")) {
+          console.log("Creating new user");
           const { error: signUpError } = await supabase.auth.signUp({
             email: `${address}@ton.wallet`,
             password: address,
@@ -90,11 +111,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           if (signUpError) {
             throw signUpError;
+          } else {
+            // Try to sign in again after signup
+            await supabase.auth.signInWithPassword({
+              email: `${address}@ton.wallet`,
+              password: address,
+            });
           }
         } else {
           throw error;
         }
       }
+      
+      toast({
+        title: "Wallet Connected",
+        description: "Successfully connected your TON wallet",
+      });
     } catch (error) {
       console.error("Authentication error:", error);
       toast({
@@ -108,8 +140,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const connectWallet = async () => {
     try {
-      await tonConnectUI.connectWallet();
+      console.log("Attempting to connect wallet...");
+      const result = await tonConnectUI.connectWallet();
+      console.log("Connect wallet result:", result);
     } catch (error) {
+      console.error("Connect wallet error:", error);
       if (error instanceof UserRejectsError) {
         toast({
           title: "Connection Rejected",
@@ -130,6 +165,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       tonConnectUI.disconnect();
       await supabase.auth.signOut();
+      toast({
+        title: "Disconnected",
+        description: "Successfully disconnected your wallet",
+      });
     } catch (error) {
       console.error("Error disconnecting:", error);
       toast({
