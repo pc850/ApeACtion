@@ -67,25 +67,76 @@ export const sendChatMessage = async (
 };
 
 export const simulateCreatorResponse = async (
-  creatorId: string
+  creatorId: string,
+  userMessage: string
 ): Promise<ChatMessage> => {
-  // Simulate API call
-  await delay(2000 + Math.random() * 3000); // Random delay between 2-5 seconds
+  // Simulate API call with variable timing to feel more realistic
+  await delay(1000 + Math.random() * 2000);
   
-  const responses = [
-    "Thanks for your message! I appreciate the support.",
-    "Hello there! Great to see you in my chat.",
-    "Thanks for watching my stream! What did you think?",
-    "I'm glad you're enjoying the content! More coming soon.",
-    "Feel free to ask any questions about what I'm doing!",
-    "Don't forget to follow if you're enjoying the stream!",
+  // Simple keyword detection for more contextual responses
+  const lowerCaseMessage = userMessage.toLowerCase();
+  let response = '';
+  
+  // Create personalized responses based on message content
+  if (lowerCaseMessage.includes('hello') || lowerCaseMessage.includes('hi') || lowerCaseMessage.includes('hey')) {
+    response = "Hey there! So glad you stopped by my stream today! How are you doing?";
+  } else if (lowerCaseMessage.includes('how are you') || lowerCaseMessage.includes('how's it going') || lowerCaseMessage.includes('how are things')) {
+    response = "I'm doing fantastic today! Just really enjoying this stream and chatting with awesome viewers like you. How about yourself?";
+  } else if (lowerCaseMessage.includes('what') && (lowerCaseMessage.includes('doing') || lowerCaseMessage.includes('up to'))) {
+    response = "Right now I'm just streaming and chatting with my viewers! I might do some gaming later, or maybe a Q&A session. Any preferences?";
+  } else if (lowerCaseMessage.includes('love') || lowerCaseMessage.includes('like') || lowerCaseMessage.includes('enjoy')) {
+    response = "Aww, that's so sweet! I really appreciate your support. It means a lot to me that you enjoy my content!";
+  } else if (lowerCaseMessage.includes('?')) {
+    response = "That's a great question! I think the best way to look at it is to consider what makes you happy. What do you think?";
+  } else if (lowerCaseMessage.includes('thank')) {
+    response = "You're so welcome! I'm always happy to chat with my viewers. That's what makes streaming so fun for me!";
+  } else if (lowerCaseMessage.includes('help') || lowerCaseMessage.includes('advice')) {
+    response = "I'd be happy to help! What specifically are you looking for advice about? I might not be an expert, but I'll try my best!";
+  } else if (lowerCaseMessage.includes('joke') || lowerCaseMessage.includes('funny')) {
+    const jokes = [
+      "Why don't scientists trust atoms? Because they make up everything!",
+      "What's the best thing about Switzerland? I don't know, but the flag is a big plus!",
+      "I told my wife she was drawing her eyebrows too high. She looked surprised!",
+      "Why did the scarecrow win an award? Because he was outstanding in his field!"
+    ];
+    response = jokes[Math.floor(Math.random() * jokes.length)];
+  } else if (lowerCaseMessage.length < 10) {
+    response = "I'd love to hear more! What's on your mind today?";
+  } else {
+    // Default responses for when no keywords match
+    const defaultResponses = [
+      "That's really interesting! Tell me more about it.",
+      "I appreciate you sharing that with me. What else is happening in your world?",
+      "I totally get what you're saying. It's always nice to connect with viewers like you!",
+      "That's a unique perspective! I hadn't thought about it that way before.",
+      "Thanks for chatting with me today! It's conversations like these that make streaming worthwhile.",
+      "I'm really enjoying our conversation! You bring up great points.",
+      "That's fascinating! I'd love to hear more about your thoughts on this topic."
+    ];
+    response = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+  }
+  
+  // Add some personality to responses
+  const personalityTouches = [
+    "",
+    " 💕",
+    " 😊",
+    " What about you?",
+    " I'm curious what you think!",
+    " Thanks for asking!",
+    " Really appreciate your message!",
+    ""
   ];
+  
+  if (Math.random() > 0.5) {
+    response += personalityTouches[Math.floor(Math.random() * personalityTouches.length)];
+  }
   
   // Return simulated creator response
   return {
     id: `creator-${Date.now()}`,
     senderId: creatorId,
-    content: responses[Math.floor(Math.random() * responses.length)],
+    content: response,
     timestamp: new Date(),
     isFromCreator: true
   };

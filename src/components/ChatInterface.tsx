@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { Video } from '@/context/VideoContext';
@@ -22,6 +23,7 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
@@ -45,7 +47,7 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
-  }, [chatHistory]);
+  }, [chatHistory, isTyping]);
   
   const handleSendMessage = async () => {
     if (!message.trim()) return;
@@ -54,17 +56,23 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
     if (!canSend) return;
     
     setIsLoading(true);
+    const userMessageContent = message.trim();
     
     try {
-      const userMessage = await sendChatMessage(video.creatorId, message);
+      const userMessage = await sendChatMessage(video.creatorId, userMessageContent);
       setChatHistory(prev => [...prev, userMessage]);
       
       setMessage('');
       
-      const creatorMessage = await simulateCreatorResponse(video.creatorId);
+      // Show typing indicator while waiting for response
+      setIsTyping(true);
+      
+      const creatorMessage = await simulateCreatorResponse(video.creatorId, userMessageContent);
+      setIsTyping(false);
       setChatHistory(prev => [...prev, creatorMessage]);
     } catch (error) {
       console.error('Error sending chat message:', error);
+      setIsTyping(false);
     } finally {
       setIsLoading(false);
     }
@@ -134,9 +142,9 @@ const ChatInterface = ({ video }: ChatInterfaceProps) => {
             </div>
           ))}
           
-          {isLoading && (
+          {isTyping && (
             <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-lg p-3 bg-muted text-foreground">
+              <div className="max-w-[80%] rounded-lg p-3 bg-muted text-foreground rounded-tl-none">
                 <div className="flex gap-2">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse delay-100"></div>
