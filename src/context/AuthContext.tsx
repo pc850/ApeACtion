@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/components/ui/use-toast";
 import { Session } from '@supabase/supabase-js';
 import { useWallet } from '@/hooks/useWallet';
-import { tonConnectUI, getWalletAddress } from '@/utils/tonConnectUtils';
+import { tonConnectUI, getWalletAddress, getTelegramUsername } from '@/utils/tonConnectUtils';
 import { signInWithTON, signOut } from '@/services/authService';
 
 type AuthContextType = {
@@ -14,6 +14,7 @@ type AuthContextType = {
   disconnectWallet: () => Promise<void>;
   walletAddress: string | null;
   isWalletConnected: boolean;
+  telegramUsername: string | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [telegramUsername, setTelegramUsername] = useState<string | null>(null);
   const { 
     walletAddress, 
     isWalletConnected, 
@@ -52,12 +54,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     tonConnectUI.onStatusChange(async (wallet) => {
       console.log("Wallet status changed:", wallet);
       const address = getWalletAddress(wallet);
+      const username = getTelegramUsername(wallet);
+      
+      if (username) {
+        setTelegramUsername(username);
+      }
       
       if (address) {
         // If wallet is connected but no session exists, create one
         if (!session) {
           try {
-            await signInWithTON(address);
+            await signInWithTON(address, username);
           } catch (error) {
             console.error("Error signing in with TON:", error);
           }
@@ -112,6 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         disconnectWallet,
         walletAddress,
         isWalletConnected,
+        telegramUsername,
       }}
     >
       {children}

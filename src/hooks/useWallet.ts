@@ -2,10 +2,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { UserRejectsError } from '@tonconnect/ui';
 import { toast } from "@/components/ui/use-toast";
-import { tonConnectUI, getWalletAddress } from '@/utils/tonConnectUtils';
+import { tonConnectUI, getWalletAddress, getTelegramUsername } from '@/utils/tonConnectUtils';
 
 export const useWallet = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [telegramUsername, setTelegramUsername] = useState<string | null>(null);
   const [isWalletLoading, setIsWalletLoading] = useState(true);
 
   useEffect(() => {
@@ -16,8 +17,14 @@ export const useWallet = () => {
         if (wallets.length > 0) {
           console.log("Wallet already connected:", wallets[0]);
           const address = getWalletAddress(wallets[0]);
+          const username = getTelegramUsername(wallets[0]);
+          
           if (address) {
             setWalletAddress(address);
+          }
+          
+          if (username) {
+            setTelegramUsername(username);
           }
         }
       } catch (error) {
@@ -27,13 +34,35 @@ export const useWallet = () => {
       }
     };
 
+    // Listen for wallet connection status changes
+    const unsubscribe = tonConnectUI.onStatusChange((wallet) => {
+      if (wallet) {
+        const address = getWalletAddress(wallet);
+        const username = getTelegramUsername(wallet);
+        
+        setWalletAddress(address);
+        setTelegramUsername(username);
+        
+        console.log("Wallet connected:", { address, username });
+      } else {
+        setWalletAddress(null);
+        setTelegramUsername(null);
+      }
+    });
+
     initWallet();
+    
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const connectWallet = useCallback(async () => {
     try {
       console.log("Attempting to connect wallet...");
       setIsWalletLoading(true);
+      
+      // Show all available wallets to maximize compatibility
       const result = await tonConnectUI.connectWallet();
       console.log("Connect wallet result:", result);
     } catch (error) {
@@ -60,6 +89,7 @@ export const useWallet = () => {
     try {
       tonConnectUI.disconnect();
       setWalletAddress(null);
+      setTelegramUsername(null);
       toast({
         title: "Disconnected",
         description: "Successfully disconnected your wallet",
@@ -76,6 +106,7 @@ export const useWallet = () => {
 
   return {
     walletAddress,
+    telegramUsername,
     isWalletConnected: !!walletAddress,
     isWalletLoading,
     connectWallet,

@@ -13,13 +13,14 @@ export const signInExistingUser = async (address: string) => {
   }
 };
 
-export const signUpNewUser = async (address: string) => {
+export const signUpNewUser = async (address: string, telegramUsername?: string | null) => {
   const { error } = await supabase.auth.signUp({
     email: `${address}@ton.wallet`,
     password: address,
     options: {
       data: {
         wallet_address: address,
+        telegram_username: telegramUsername || null,
       }
     }
   });
@@ -48,9 +49,9 @@ export const checkUserExists = async (address: string) => {
   return !!data;
 };
 
-export const signInWithTON = async (address: string) => {
+export const signInWithTON = async (address: string, telegramUsername?: string | null) => {
   try {
-    console.log("Signing in with address:", address);
+    console.log("Signing in with address:", address, "Telegram:", telegramUsername);
     
     // Check if user exists first
     const userExists = await checkUserExists(address);
@@ -59,15 +60,35 @@ export const signInWithTON = async (address: string) => {
     if (userExists) {
       console.log("User exists, signing in");
       await signInExistingUser(address);
+      
+      // Update telegram username if provided
+      if (telegramUsername) {
+        await updateUserTelegramUsername(address, telegramUsername);
+      }
     } else {
       console.log("User doesn't exist, creating new account");
-      await signUpNewUser(address);
+      await signUpNewUser(address, telegramUsername);
     }
     
     return true;
   } catch (error) {
     console.error("Authentication error:", error);
     throw error;
+  }
+};
+
+export const updateUserTelegramUsername = async (address: string, telegramUsername: string) => {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ telegram_username: telegramUsername })
+      .eq('username', `ton_${address}`);
+    
+    if (error) {
+      console.error("Error updating Telegram username:", error);
+    }
+  } catch (error) {
+    console.error("Error updating user Telegram username:", error);
   }
 };
 

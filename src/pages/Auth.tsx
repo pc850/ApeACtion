@@ -61,9 +61,14 @@ const Auth = () => {
             <div className="flex justify-center mb-6">
               <TokenCounter />
             </div>
-            <p className="text-center mb-6">
-              Authentication using TON wallet provides a secure way to access your account without passwords.
-            </p>
+            <div className="text-center mb-6 space-y-2">
+              <p>
+                Authentication using TON wallet provides a secure way to access your account without passwords.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Compatible with all TON wallets including Tonkeeper, TonHub, MyTonWallet and Telegram Wallet
+              </p>
+            </div>
             <Button 
               onClick={handleConnectWallet} 
               disabled={isLoading} 

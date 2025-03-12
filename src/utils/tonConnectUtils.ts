@@ -25,9 +25,8 @@ export const getManifestData = async () => {
 
 // Initialize TonConnect with proper configuration
 // Since we need to fetch the manifest data async, we'll start with a default
-// and update it once we have the data
 export const tonConnectUI = new TonConnectUI({
-  manifestUrl: 'https://kkddzgpenchcqjxyehep.supabase.co/manifest.json',
+  manifestUrl: 'https://kkddzgpenchcqjxyehep.supabase.co/manifest.json' as `${string}://${string}`,
   actionsConfiguration: {
     twaReturnUrl: window.location.origin,
   },
@@ -63,6 +62,14 @@ export const tonConnectUI = new TonConnectUI({
 export const getWalletAddress = (wallet: any): string | null => {
   if (wallet && 'account' in wallet && wallet.account?.address) {
     return wallet.account.address;
+  }
+  return null;
+};
+
+// Extract Telegram username if available
+export const getTelegramUsername = (wallet: any): string | null => {
+  if (wallet && wallet.device && wallet.device.platform === 'telegram') {
+    return wallet.device.appName || null;
   }
   return null;
 };
