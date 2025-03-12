@@ -1,3 +1,4 @@
+
 import { TonConnectUI } from '@tonconnect/ui';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -24,7 +25,7 @@ export const getManifestData = async () => {
 
 // Initialize TonConnect with proper configuration
 export const tonConnectUI = new TonConnectUI({
-  manifestUrl: 'https://kkddzgpenchcqjxyehep.supabase.co/manifest.json' as `${string}://${string}`,
+  manifestUrl: "https://kkddzgpenchcqjxyehep.supabase.co/manifest.json" as `${string}://${string}`,
   actionsConfiguration: {
     twaReturnUrl: window.location.origin,
   },
