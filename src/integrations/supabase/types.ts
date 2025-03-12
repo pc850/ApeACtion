@@ -65,25 +65,28 @@ export type Database = {
       }
       wallet_connections: {
         Row: {
-          avatar_url: string | null
           created_at: string
           id: string
+          telegram_id: number | null
           updated_at: string
           username: string | null
+          wallet_address: string | null
         }
         Insert: {
-          avatar_url?: string | null
           created_at?: string
           id: string
+          telegram_id?: number | null
           updated_at?: string
           username?: string | null
+          wallet_address?: string | null
         }
         Update: {
-          avatar_url?: string | null
           created_at?: string
           id?: string
+          telegram_id?: number | null
           updated_at?: string
           username?: string | null
+          wallet_address?: string | null
         }
         Relationships: []
       }

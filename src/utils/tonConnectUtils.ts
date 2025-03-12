@@ -24,9 +24,8 @@ export const getManifestData = async () => {
 };
 
 // Initialize TonConnect with proper configuration
-// Since we need to fetch the manifest data async, we'll start with a default
 export const tonConnectUI = new TonConnectUI({
-  manifestUrl: 'https://kkddzgpenchcqjxyehep.supabase.co/manifest.json' as `${string}://${string}`,
+  manifestUrl: `https://kkddzgpenchcqjxyehep.supabase.co/manifest.json`,
   actionsConfiguration: {
     twaReturnUrl: window.location.origin,
   },
@@ -66,10 +65,39 @@ export const getWalletAddress = (wallet: any): string | null => {
   return null;
 };
 
-// Extract Telegram username if available
-export const getTelegramUsername = (wallet: any): string | null => {
-  if (wallet && wallet.device && wallet.device.platform === 'telegram') {
-    return wallet.device.appName || null;
+// Extract Telegram ID and username if available
+export const getTelegramInfo = (wallet: any): { id?: number; username?: string } => {
+  if (wallet?.device?.platform === 'telegram') {
+    return {
+      id: wallet.device.appVersion,
+      username: wallet.device.appName
+    };
   }
-  return null;
+  return {};
 };
+
+// Store wallet connection in database
+export const storeWalletConnection = async (
+  walletAddress: string,
+  telegramId?: number,
+  telegramUsername?: string
+) => {
+  try {
+    const { error } = await supabase
+      .from('wallet_connections')
+      .upsert({
+        wallet_address: walletAddress,
+        telegram_id: telegramId,
+        username: telegramUsername,
+      }, {
+        onConflict: 'wallet_address'
+      });
+
+    if (error) {
+      console.error('Error storing wallet connection:', error);
+    }
+  } catch (error) {
+    console.error('Error in storeWalletConnection:', error);
+  }
+};
+

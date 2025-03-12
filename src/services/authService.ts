@@ -1,5 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { storeWalletConnection } from '@/utils/tonConnectUtils';
 
 export const signInExistingUser = async (address: string) => {
   const { error } = await supabase.auth.signInWithPassword({
@@ -13,22 +13,19 @@ export const signInExistingUser = async (address: string) => {
   }
 };
 
-export const signUpNewUser = async (address: string, telegramUsername?: string | null) => {
+export const signUpNewUser = async (address: string, telegramId?: number, telegramUsername?: string) => {
   const { error } = await supabase.auth.signUp({
     email: `${address}@ton.wallet`,
     password: address,
-    options: {
-      data: {
-        wallet_address: address,
-        telegram_username: telegramUsername || null,
-      }
-    }
   });
   
   if (error) {
     console.error("Sign up error:", error);
     throw error;
   }
+  
+  // Store wallet connection after successful signup
+  await storeWalletConnection(address, telegramId, telegramUsername);
   
   // After successful signup, sign in
   await signInExistingUser(address);
@@ -49,46 +46,29 @@ export const checkUserExists = async (address: string) => {
   return !!data;
 };
 
-export const signInWithTON = async (address: string, telegramUsername?: string | null) => {
+export const signInWithTON = async (address: string, telegramId?: number, telegramUsername?: string) => {
   try {
-    console.log("Signing in with address:", address, "Telegram:", telegramUsername);
+    console.log("Signing in with address:", address, "Telegram:", { telegramId, telegramUsername });
     
     // Check if user exists first
     const userExists = await checkUserExists(address);
+    
+    // Store/update wallet connection regardless of auth state
+    await storeWalletConnection(address, telegramId, telegramUsername);
     
     // If user exists, sign in, otherwise sign up
     if (userExists) {
       console.log("User exists, signing in");
       await signInExistingUser(address);
-      
-      // Update telegram username if provided
-      if (telegramUsername) {
-        await updateUserTelegramUsername(address, telegramUsername);
-      }
     } else {
       console.log("User doesn't exist, creating new account");
-      await signUpNewUser(address, telegramUsername);
+      await signUpNewUser(address, telegramId, telegramUsername);
     }
     
     return true;
   } catch (error) {
     console.error("Authentication error:", error);
     throw error;
-  }
-};
-
-export const updateUserTelegramUsername = async (address: string, telegramUsername: string) => {
-  try {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ telegram_username: telegramUsername })
-      .eq('username', `ton_${address}`);
-    
-    if (error) {
-      console.error("Error updating Telegram username:", error);
-    }
-  } catch (error) {
-    console.error("Error updating user Telegram username:", error);
   }
 };
 
