@@ -1,4 +1,3 @@
-
 import { TonConnectUI } from '@tonconnect/ui';
 import { supabase } from '@/integrations/supabase/client';
 
