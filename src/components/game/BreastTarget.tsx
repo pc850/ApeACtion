@@ -30,6 +30,28 @@ const BreastTarget = ({ position, size, onClick }: BreastTargetProps) => {
       {/* Inner circle for nipple effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#D946EF]" />
       
+      {/* Add areola effect */}
+      <div 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF9AAA]"
+        style={{
+          width: `${size * 0.6}px`,
+          height: `${size * 0.6}px`,
+          opacity: 0.7
+        }}
+      />
+      
+      {/* Small highlights to give 3D effect */}
+      <div 
+        className="absolute rounded-full bg-white" 
+        style={{
+          width: `${size * 0.15}px`,
+          height: `${size * 0.15}px`,
+          top: `${size * 0.2}px`,
+          left: `${size * 0.2}px`,
+          opacity: 0.3
+        }}
+      />
+      
       {/* Target indicator */}
       <div className="absolute -top-1 -right-1">
         <Target className="w-4 h-4 text-primary animate-pulse" />

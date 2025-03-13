@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { createFloatingNumber } from '@/lib/animations';
@@ -40,10 +41,11 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
   const [direction, setDirection] = useState({ dx: 0, dy: 0 });
   const [changeDirectionTimer, setChangeDirectionTimer] = useState<NodeJS.Timeout | null>(null);
   const animationRef = useRef<number | null>(null);
+  const [speedMultiplier, setSpeedMultiplier] = useState(1);
   
   const gameConfig: GameConfig = {
     maxTargets: 5, // User requested 5 targets per round
-    animationSpeed: 2, // Controls speed of the target in pixels per frame
+    animationSpeed: 2, // Base speed - will be multiplied by speedMultiplier
     targetSize: 48, // Size of the breast target in pixels
   };
 
@@ -82,8 +84,8 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
   const generateRandomDirection = () => {
     const angle = Math.random() * 2 * Math.PI;
     return {
-      dx: Math.cos(angle) * gameConfig.animationSpeed,
-      dy: Math.sin(angle) * gameConfig.animationSpeed
+      dx: Math.cos(angle) * gameConfig.animationSpeed * speedMultiplier,
+      dy: Math.sin(angle) * gameConfig.animationSpeed * speedMultiplier
     };
   };
   
@@ -164,6 +166,7 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     setRoundActive(true);
     setTargetsHit(0);
     setRoundScore(0);
+    setSpeedMultiplier(1); // Reset speed multiplier at the start of each round
     
     // Generate initial direction and position
     setDirection(generateRandomDirection());
@@ -248,6 +251,9 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
         setRoundActive(false);
       }, 500);
     } else {
+      // Increase the speed multiplier for the next target
+      setSpeedMultiplier(prev => prev + 0.3);
+      
       // Spawn a new target after a short delay
       setTimeout(() => {
         setTargetPosition(generateRandomPosition());
