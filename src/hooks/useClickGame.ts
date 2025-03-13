@@ -39,7 +39,7 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
   
   const gameConfig: GameConfig = {
     maxTargets: 5, // User requested 5 targets per round
-    animationSpeed: 2, // Base speed - will be multiplied by speedMultiplier
+    animationSpeed: 10, // Base speed increased 5x - from 2 to 10
     targetSize: 48, // Size of the breast target in pixels
   };
 
@@ -62,22 +62,23 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     }
     
     // Set a new timer to change direction randomly
-    // Make direction changes more frequent as rounds increase
-    const changeInterval = Math.max(300, 1000 - (roundsCompleted * 100));
+    // Make direction changes more frequent for faster gameplay
+    const changeInterval = Math.max(200, 800 - (roundsCompleted * 100));
     const timer = setTimeout(() => {
       // Don't change direction too drastically to avoid glitches
       const currentAngle = Math.atan2(direction.dy, direction.dx);
       const angleChange = (Math.random() * Math.PI / 2) - Math.PI / 4; // Max 45 degrees change
       const newAngle = currentAngle + angleChange;
       
-      const newSpeed = Math.max(1.5, gameConfig.animationSpeed * speedMultiplier * (1 + (roundsCompleted * 0.2)));
+      // 5x faster speeds
+      const newSpeed = Math.max(7.5, gameConfig.animationSpeed * speedMultiplier * (1 + (roundsCompleted * 0.2)));
       setDirection({
         dx: Math.cos(newAngle) * newSpeed,
         dy: Math.sin(newAngle) * newSpeed
       });
       
       scheduleDirectionChange(); // Schedule the next change
-    }, changeInterval + Math.random() * 1000);
+    }, changeInterval + Math.random() * 500); // Reduced randomness for more consistent movement
     
     setChangeDirectionTimer(timer);
   };
@@ -101,11 +102,11 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     const mainCircle = mainCircleRef.current.getBoundingClientRect();
     const centerX = mainCircle.width / 2;
     const centerY = mainCircle.height / 2;
-    const radius = (mainCircle.width / 2) * 0.8 - (gameConfig.targetSize / 2) - EDGE_PADDING;
+    // Slightly increased safe area for better bounce detection
+    const radius = (mainCircle.width / 2) * 0.85 - (gameConfig.targetSize / 2) - EDGE_PADDING;
     
-    // Add some random jitter to the movement for higher difficulties
-    // Reduce jitter for smoother motion
-    const jitterFactor = Math.min(0.3, roundsCompleted * 0.05);
+    // Reduce jitter for faster movement to prevent visual glitches
+    const jitterFactor = Math.min(0.1, roundsCompleted * 0.02);
     const jitterX = (Math.random() * 2 - 1) * jitterFactor;
     const jitterY = (Math.random() * 2 - 1) * jitterFactor;
     
@@ -119,25 +120,26 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       const dy = newY - centerY;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
-      // If target would go outside the circle, bounce it back
+      // If target would go outside the circle, bounce it back with improved detection
       if (distance > radius) {
         // Calculate the normal vector to the circle at the point of intersection
         const nx = dx / distance;
         const ny = dy / distance;
         
-        // Calculate the reflection using the normal vector
+        // Calculate the reflection using the normal vector with improved bounce algorithm
         const bounce = calculateBounce(direction.dx, direction.dy, nx, ny);
         
         // Update direction with slight randomness to prevent repetitive patterns
-        const randomFactor = 1 + (Math.random() * 0.2 - 0.1); // ±10% variation
+        // Reduced randomness for more predictable bounces
+        const randomFactor = 1 + (Math.random() * 0.1 - 0.05); // ±5% variation
         setDirection({
           dx: bounce.dx * randomFactor,
           dy: bounce.dy * randomFactor
         });
         
         // Place the target exactly at the edge of the valid area plus a bit inward
-        // to prevent getting stuck on the edge
-        const safeDistance = radius - 2;
+        // Increased inward offset to prevent sticking at edges
+        const safeDistance = radius - 5;
         newX = centerX + safeDistance * nx;
         newY = centerY + safeDistance * ny;
       }

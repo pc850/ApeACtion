@@ -23,10 +23,11 @@ export const generateRandomPosition = (mainCircleRef: React.RefObject<HTMLDivEle
 };
 
 // Generate a random movement direction with smoother velocity
+// Now 5x faster than before
 export const generateRandomDirection = (speedMultiplier: number, roundsCompleted: number) => {
   const angle = Math.random() * 2 * Math.PI;
-  // Increase speed based on rounds completed, but ensure minimum speed
-  const baseSpeed = Math.max(1.5, 2 * speedMultiplier * (1 + (roundsCompleted * 0.2)));
+  // Increase speed by 5x, with a minimum speed to ensure movement
+  const baseSpeed = Math.max(7.5, 10 * speedMultiplier * (1 + (roundsCompleted * 0.2)));
   return {
     dx: Math.cos(angle) * baseSpeed,
     dy: Math.sin(angle) * baseSpeed
@@ -37,8 +38,10 @@ export const generateRandomDirection = (speedMultiplier: number, roundsCompleted
 export const calculateBounce = (dx: number, dy: number, nx: number, ny: number) => {
   // nx, ny is the normal vector to the edge
   const dot = dx * nx + dy * ny;
+  // Apply a small speed boost after bouncing to prevent getting stuck
+  const boostFactor = 1.05;
   return {
-    dx: dx - 2 * dot * nx,
-    dy: dy - 2 * dot * ny
+    dx: (dx - 2 * dot * nx) * boostFactor,
+    dy: (dy - 2 * dot * ny) * boostFactor
   };
 };
