@@ -24,8 +24,13 @@ export const getManifestData = async () => {
 };
 
 // Initialize TonConnect with proper configuration
+// Define parts of the URL separately to satisfy TypeScript's template literal type
+const protocol = "https";
+const domain = "kkddzgpenchcqjxyehep.supabase.co/manifest.json";
+const manifestUrl = `${protocol}://${domain}`;
+
 export const tonConnectUI = new TonConnectUI({
-  manifestUrl: "https://kkddzgpenchcqjxyehep.supabase.co/manifest.json" as `${string}://${string}`,
+  manifestUrl: manifestUrl,
   actionsConfiguration: {
     twaReturnUrl: window.location.origin,
   },
