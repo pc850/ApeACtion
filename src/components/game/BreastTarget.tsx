@@ -1,6 +1,6 @@
 
 import { Target } from 'lucide-react';
-import { Position } from '@/hooks/useClickGame';
+import { Position } from '@/hooks/game/types';
 
 interface BreastTargetProps {
   position: Position;
