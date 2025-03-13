@@ -5,7 +5,7 @@ import { GameState, GameConfig } from './game/types';
 
 // Import our refactored hooks
 import { useGameState } from './game/useGameState';
-import { useTargetAnimation } from './game/useTargetAnimation';
+import { useTargetAnimation } from './game/animations/useTargetAnimation';
 import { useGameInteractions } from './game/useGameInteractions';
 
 // Correctly re-export types
