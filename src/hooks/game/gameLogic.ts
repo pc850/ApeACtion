@@ -23,11 +23,11 @@ export const startRound = (
   setTargetsHit(0);
   setRoundScore(0);
   
-  // Set initial speed based on rounds completed
-  setSpeedMultiplier(1 + (roundsCompleted * 0.3));
+  // Set initial speed based on rounds completed, with higher minimum speed
+  setSpeedMultiplier(1.5 + (roundsCompleted * 0.4));
   
-  // Generate initial direction and position
-  setDirection(generateRandomDirection(1 + (roundsCompleted * 0.3), roundsCompleted));
+  // Generate initial direction and position with higher initial velocity
+  setDirection(generateRandomDirection(1.5 + (roundsCompleted * 0.4), roundsCompleted));
   setTargetPosition(generateRandomPosition(mainCircleRef));
   setShowTarget(true);
   
@@ -35,7 +35,7 @@ export const startRound = (
   scheduleDirectionChange();
   
   // Start the animation - Fix: Don't directly modify the ref
-  if (animationRef.current !== null && typeof animationRef.current === 'number') {
+  if (animationRef.current !== null) {
     cancelAnimationFrame(animationRef.current);
   }
   // Call animateTarget which will set animationRef.current internally
@@ -92,39 +92,39 @@ export const handleTargetClick = (
     // Increase rounds completed counter
     setRoundsCompleted(prev => prev + 1);
     
-    // Don't end the round, just reset targets hit and show a new target
+    // Don't end the round, just reset targets hit and show a new target with increased difficulty
     setTimeout(() => {
       // Reset targets hit but keep the round active
       setTargetsHit(0);
       
-      // Increase speed for the next round
-      setSpeedMultiplier(prev => prev + 0.5);
+      // Increase speed significantly for the next round
+      setSpeedMultiplier(prev => prev + 0.8);
       
       // Generate a new position for the target
       setTargetPosition(generateRandomPosition(mainCircleRef));
       
       // Keep animation running - Fix: Don't directly modify the ref
-      if (animationRef.current !== null && typeof animationRef.current === 'number') {
-        cancelAnimationFrame(animationRef.current);
-      }
-      // Call animateTarget which will set the ref internally
-      animateTarget();
-    }, 300);
-  } else {
-    // Increase the speed multiplier for the next target
-    setSpeedMultiplier(prev => prev + 0.3);
-    
-    // Spawn a new target after a short delay
-    setTimeout(() => {
-      setTargetPosition(generateRandomPosition(mainCircleRef));
-      
-      // Ensure animation continues - Fix: Don't directly modify the ref
-      if (animationRef.current !== null && typeof animationRef.current === 'number') {
+      if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current);
       }
       // Call animateTarget which will set the ref internally
       animateTarget();
     }, 200); // Reduced delay for faster gameplay
+  } else {
+    // Increase the speed multiplier for the next target
+    setSpeedMultiplier(prev => prev + 0.5); // Bigger speed boost
+    
+    // Spawn a new target after a shorter delay
+    setTimeout(() => {
+      setTargetPosition(generateRandomPosition(mainCircleRef));
+      
+      // Ensure animation continues - Fix: Don't directly modify the ref
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      // Call animateTarget which will set the ref internally
+      animateTarget();
+    }, 150); // Even shorter delay for faster gameplay
   }
 };
 

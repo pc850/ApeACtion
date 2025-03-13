@@ -23,25 +23,37 @@ export const generateRandomPosition = (mainCircleRef: React.RefObject<HTMLDivEle
 };
 
 // Generate a random movement direction with smoother velocity
-// Now 5x faster than before
+// Now 5x faster than before, with additional randomness
 export const generateRandomDirection = (speedMultiplier: number, roundsCompleted: number) => {
   const angle = Math.random() * 2 * Math.PI;
-  // Increase speed by 5x, with a minimum speed to ensure movement
-  const baseSpeed = Math.max(7.5, 10 * speedMultiplier * (1 + (roundsCompleted * 0.2)));
+  // Further increased minimum speed to ensure continuous fast movement
+  const baseSpeed = Math.max(10, 15 * speedMultiplier * (1 + (roundsCompleted * 0.2)));
   return {
     dx: Math.cos(angle) * baseSpeed,
     dy: Math.sin(angle) * baseSpeed
   };
 };
 
-// Smoother bounce algorithm for when the target hits the circle edge
+// Improved bounce algorithm with more unpredictable behavior
 export const calculateBounce = (dx: number, dy: number, nx: number, ny: number) => {
   // nx, ny is the normal vector to the edge
   const dot = dx * nx + dy * ny;
-  // Apply a small speed boost after bouncing to prevent getting stuck
-  const boostFactor = 1.05;
+  
+  // Apply speed boost after bouncing to prevent getting stuck and make it harder to click
+  const boostFactor = 1.15; // Increased from 1.05
+  
+  // Add slight randomness to bounce angle to make movement less predictable
+  const angleVariation = (Math.random() * 0.3) - 0.15; // ±15% angle variation
+  const cosVar = Math.cos(angleVariation);
+  const sinVar = Math.sin(angleVariation);
+  
+  // Apply bounce with randomized direction
+  const newDx = (dx - 2 * dot * nx) * boostFactor;
+  const newDy = (dy - 2 * dot * ny) * boostFactor;
+  
+  // Add slight rotation to the bounce vector
   return {
-    dx: (dx - 2 * dot * nx) * boostFactor,
-    dy: (dy - 2 * dot * ny) * boostFactor
+    dx: newDx * cosVar - newDy * sinVar,
+    dy: newDx * sinVar + newDy * cosVar
   };
 };
