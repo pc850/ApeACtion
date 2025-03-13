@@ -47,9 +47,11 @@ export const useTargetAnimation = ({
   const lastBounceTime = useRef(0);
   const changeDirectionTimer = useRef<NodeJS.Timeout | null>(null);
   const lastMovementTime = useRef(Date.now());
-  const forcedMovementTimer = useRef<NodeJS.Timeout | null>(null); // NEW: Timer to force movement
+  const lastPositionRef = useRef<Position>({ x: 0, y: 0 });
+  const forceMovementInterval = useRef<NodeJS.Timeout | null>(null); // Timer for constant checks
+  const stallDetectionInterval = useRef<NodeJS.Timeout | null>(null); // Timer for stall detection
 
-  // Schedule more frequent direction changes
+  // Schedule much more frequent direction changes
   const scheduleDirectionChange = () => {
     // Clear any existing timer
     if (changeDirectionTimer.current) {
@@ -59,20 +61,20 @@ export const useTargetAnimation = ({
     // Get current level config
     const levelConfig = getCurrentLevelConfig();
     
-    // IMPROVED: Set a new timer to change direction randomly - much more frequently now
-    // DECREASED: Even shorter intervals between direction changes
-    const baseChangeInterval = 300 - (currentLevel * 75); // Decreased from 400ms
-    const changeInterval = Math.max(50, baseChangeInterval - (roundsCompleted * 50)); // Decreased minimum to 50ms
+    // DRASTICALLY IMPROVED: Set a new timer to change direction much more frequently
+    const baseChangeInterval = Math.max(200, 250 - (currentLevel * 75)); // Reduced interval
+    const changeInterval = Math.max(30, baseChangeInterval - (roundsCompleted * 50)); // Min 30ms
+    
     const timer = setTimeout(() => {
       // Wider range of direction changes
       const currentAngle = Math.atan2(direction.dy, direction.dx);
-      const angleChange = (Math.random() * Math.PI) - Math.PI/2; // INCREASED: Even wider range of angles
+      const angleChange = (Math.random() * Math.PI) - Math.PI/2; 
       const newAngle = currentAngle + angleChange;
       
-      // Apply higher speed based on level
+      // Apply much higher speed based on level
       const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
       const levelSpeedMultiplier = levelConfig.speedMultiplier;
-      const minSpeed = gameConfig.animationSpeed * speedMultiplier * levelSpeedMultiplier * 1.3; // INCREASED: Higher minimum speed
+      const minSpeed = gameConfig.animationSpeed * speedMultiplier * levelSpeedMultiplier * 1.8; // Higher speed
       const newSpeed = Math.max(currentSpeed, minSpeed);
       
       setDirection({
@@ -81,43 +83,83 @@ export const useTargetAnimation = ({
       });
       
       scheduleDirectionChange(); // Schedule the next change
-    }, changeInterval + Math.random() * 100); // Less predictable timing
+    }, changeInterval + Math.random() * 50); // Less predictable timing
     
     changeDirectionTimer.current = timer;
   };
   
-  // NEW: Set up a recurring timer to force movement 
-  const setupForcedMovementCheck = () => {
-    if (forcedMovementTimer.current) {
-      clearInterval(forcedMovementTimer.current);
+  // Force movement every few milliseconds to ensure target never stops
+  const setupForceMovementCheck = () => {
+    if (forceMovementInterval.current) {
+      clearInterval(forceMovementInterval.current);
     }
     
-    // Check very frequently if target is moving too slow
+    // Check extremely frequently (every 20ms) to ensure constant motion
     const timer = setInterval(() => {
       if (!roundActive) return;
       
       const levelConfig = getCurrentLevelConfig();
-      const minRequiredSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier;
+      const minRequiredSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier * 1.5;
       
-      // Ensure target is moving at adequate speed
-      const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
-      if (currentSpeed < minRequiredSpeed * 0.8) { // If below 80% of expected speed
-        const newDirection = generateRandomDirection(speedMultiplier * 1.2, roundsCompleted);
-        setDirection(newDirection);
-        lastMovementTime.current = Date.now();
-      }
-      
-      // Randomly apply acceleration to create more varied movement
-      if (Math.random() < 0.3) { // 30% chance each check
+      // IMPROVED: Force acceleration randomly to create constant movement
+      if (Math.random() < 0.6) { // 60% chance each check - much higher probability
         const acceleratedDirection = applyRandomAcceleration(direction.dx, direction.dy);
         setDirection(acceleratedDirection);
       }
-    }, 100); // Check every 100ms
+      
+      // Ensure target is moving at adequate speed
+      const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
+      if (currentSpeed < minRequiredSpeed) {
+        const newDirection = generateRandomDirection(speedMultiplier * 1.5, roundsCompleted);
+        setDirection(newDirection);
+        lastMovementTime.current = Date.now();
+      }
+    }, 20); // Check every 20ms - much more frequent
     
-    forcedMovementTimer.current = timer;
+    forceMovementInterval.current = timer;
   };
   
-  // Enhanced animation with jitter, continuous acceleration and improved bounce
+  // New function to detect and fix stalled targets
+  const setupStallDetection = () => {
+    if (stallDetectionInterval.current) {
+      clearInterval(stallDetectionInterval.current);
+    }
+    
+    // Check position changes extremely frequently
+    const timer = setInterval(() => {
+      if (!roundActive || !showTarget) return;
+      
+      // Calculate distance moved since last check
+      const distX = Math.abs(targetPosition.x - lastPositionRef.current.x);
+      const distY = Math.abs(targetPosition.y - lastPositionRef.current.y);
+      const moved = Math.sqrt(distX * distX + distY * distY);
+      
+      // If target hasn't moved significantly, force a drastic direction change
+      if (moved < 2) { // If moved less than 2 pixels, consider it stalled
+        const levelConfig = getCurrentLevelConfig();
+        const newSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier * 3.0;
+        const newAngle = Math.random() * 2 * Math.PI;
+        
+        setDirection({
+          dx: Math.cos(newAngle) * newSpeed,
+          dy: Math.sin(newAngle) * newSpeed
+        });
+        
+        // Also apply immediate position change to break out of any potential stuck state
+        setTargetPosition(prev => ({
+          x: prev.x + Math.cos(newAngle) * 5,
+          y: prev.y + Math.sin(newAngle) * 5
+        }));
+      }
+      
+      // Update the last position reference
+      lastPositionRef.current = targetPosition;
+    }, 50); // Check every 50ms
+    
+    stallDetectionInterval.current = timer;
+  };
+  
+  // Drastically enhanced animation with stronger jitter, continuous acceleration and improved bounce
   const animateTarget = () => {
     if (!mainCircleRef.current || !roundActive) return;
     
@@ -125,11 +167,11 @@ export const useTargetAnimation = ({
     const now = Date.now();
     const timeSinceLastUpdate = now - lastMovementTime.current;
     
-    // If no motion for more than 80ms (reduced from 150ms), force a strong direction change
-    if (timeSinceLastUpdate > 80) {
+    // If no motion for more than 50ms (reduced from 80ms), force a strong direction change
+    if (timeSinceLastUpdate > 50) {
       const levelConfig = getCurrentLevelConfig();
-      const minSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier * 2.0; // Double minimum speed
-      const newDirection = generateRandomDirection(speedMultiplier * 2.0, roundsCompleted); // Double speed multiplier
+      const minSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier * 3.0; // Triple minimum speed
+      const newDirection = generateRandomDirection(speedMultiplier * 3.0, roundsCompleted); // Triple speed multiplier
       setDirection(newDirection);
       lastMovementTime.current = now;
     }
@@ -143,19 +185,19 @@ export const useTargetAnimation = ({
     const centerY = mainCircle.height / 2;
     const radius = (mainCircle.width / 2) * 0.85 - (targetSize / 2) - EDGE_PADDING;
     
-    // INCREASED: Add stronger random jitter for less predictable motion
-    const jitterFactor = Math.min(0.6, 0.25 + (currentLevel * 0.05) + (roundsCompleted * 0.02)); // Increased from 0.4
-    const jitterX = (Math.random() * 2 - 1) * jitterFactor;
-    const jitterY = (Math.random() * 2 - 1) * jitterFactor;
+    // DRASTICALLY INCREASED: Add much stronger random jitter for constant visible motion
+    const jitterFactor = Math.min(1.0, 0.4 + (currentLevel * 0.1) + (roundsCompleted * 0.05)); // Increased from 0.6
+    const jitterX = (Math.random() * 2 - 1) * jitterFactor * 1.5;
+    const jitterY = (Math.random() * 2 - 1) * jitterFactor * 1.5;
     
-    // IMPROVED: More frequent sudden movement bursts
-    const burstInterval = Math.max(200, 500 - (currentLevel * 80)); // Shortened from 300ms
+    // IMPROVED: Much more frequent sudden movement bursts
+    const burstInterval = Math.max(100, 300 - (currentLevel * 80)); // Shortened from 200ms
     if (now - lastBounceTime.current > burstInterval) {
-      const burstChance = 0.3 + (currentLevel * 0.05); // Higher chance (increased from 0.2)
+      const burstChance = 0.5 + (currentLevel * 0.1); // Much higher chance (increased from 0.3)
       if (Math.random() < burstChance) {
         const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
         const burstAngle = Math.random() * 2 * Math.PI;
-        const burstMultiplier = 1.8 + (currentLevel * 0.15); // Stronger burst (increased from 1.6)
+        const burstMultiplier = 2.5 + (currentLevel * 0.25); // Much stronger burst
         setDirection({
           dx: Math.cos(burstAngle) * currentSpeed * burstMultiplier,
           dy: Math.sin(burstAngle) * currentSpeed * burstMultiplier
@@ -166,11 +208,11 @@ export const useTargetAnimation = ({
     
     // IMPROVED: More aggressive minimum speed check
     const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
-    const minSpeedMultiplier = levelConfig.speedMultiplier * 1.5; // Increased from 1.3
+    const minSpeedMultiplier = levelConfig.speedMultiplier * 2.5; // Drastically increased
     const minSpeed = gameConfig.animationSpeed * speedMultiplier * minSpeedMultiplier;
     
     if (currentSpeed < minSpeed) {
-      const newDirection = ensureMinimumSpeed(direction.dx, direction.dy, minSpeed * 1.5); // Higher boost
+      const newDirection = ensureMinimumSpeed(direction.dx, direction.dy, minSpeed * 2.0); // Much higher boost
       setDirection(newDirection);
     }
     
@@ -178,7 +220,7 @@ export const useTargetAnimation = ({
     lastMovementTime.current = now;
     
     setTargetPosition(prev => {
-      // Calculate new position with controlled jitter
+      // Calculate new position with strong jitter
       let newX = prev.x + direction.dx + jitterX;
       let newY = prev.y + direction.dy + jitterY;
       
@@ -197,7 +239,7 @@ export const useTargetAnimation = ({
         const bounce = calculateBounce(direction.dx, direction.dy, nx, ny);
         
         // INCREASED: Higher random factor for more unpredictable bounces
-        const randomFactor = 1 + (Math.random() * (0.5 + currentLevel * 0.06) - 0.2); 
+        const randomFactor = 1 + (Math.random() * (0.8 + currentLevel * 0.1) - 0.3); 
         setDirection({
           dx: bounce.dx * randomFactor,
           dy: bounce.dy * randomFactor
@@ -228,11 +270,13 @@ export const useTargetAnimation = ({
       // Start direction change scheduling
       scheduleDirectionChange();
       
-      // NEW: Setup forced movement check
-      setupForcedMovementCheck();
+      // Setup continuous movement checks - run all three mechanisms
+      setupForceMovementCheck();
+      setupStallDetection();
       
-      // Initialize movement timestamp
+      // Initialize movement timestamp and position ref
       lastMovementTime.current = Date.now();
+      lastPositionRef.current = targetPosition;
     }
     
     return () => {
@@ -248,8 +292,11 @@ export const useTargetAnimation = ({
       if (changeDirectionTimer.current) {
         clearTimeout(changeDirectionTimer.current);
       }
-      if (forcedMovementTimer.current) {
-        clearInterval(forcedMovementTimer.current);
+      if (forceMovementInterval.current) {
+        clearInterval(forceMovementInterval.current);
+      }
+      if (stallDetectionInterval.current) {
+        clearInterval(stallDetectionInterval.current);
       }
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);

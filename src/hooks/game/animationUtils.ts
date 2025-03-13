@@ -26,8 +26,8 @@ export const generateRandomPosition = (mainCircleRef: React.RefObject<HTMLDivEle
 // Now with significantly higher minimum speed to ensure continuous motion
 export const generateRandomDirection = (speedMultiplier: number, roundsCompleted: number) => {
   const angle = Math.random() * 2 * Math.PI;
-  // INCREASED: Higher minimum speed ensures targets always move quickly
-  const baseSpeed = Math.max(40, 45 * speedMultiplier * (1 + (roundsCompleted * 0.15)));
+  // DRASTICALLY INCREASED: Much higher minimum speed to ensure targets always move visibly
+  const baseSpeed = Math.max(60, 80 * speedMultiplier * (1 + (roundsCompleted * 0.15)));
   return {
     dx: Math.cos(angle) * baseSpeed,
     dy: Math.sin(angle) * baseSpeed
@@ -39,11 +39,11 @@ export const calculateBounce = (dx: number, dy: number, nx: number, ny: number) 
   // nx, ny is the normal vector to the edge
   const dot = dx * nx + dy * ny;
   
-  // INCREASED: Apply stronger speed boost after bouncing to prevent getting stuck
-  const boostFactor = 1.5; // Increased from 1.35
+  // DRASTICALLY INCREASED: Apply much stronger speed boost after bouncing
+  const boostFactor = 2.0; // Increased from 1.5
   
   // INCREASED: Add more randomness to bounce angle for less predictable movement
-  const angleVariation = (Math.random() * 0.8) - 0.4; // ±40% angle variation (increased from 30%)
+  const angleVariation = (Math.random() * 1.0) - 0.5; // ±50% angle variation
   const cosVar = Math.cos(angleVariation);
   const sinVar = Math.sin(angleVariation);
   
@@ -58,13 +58,13 @@ export const calculateBounce = (dx: number, dy: number, nx: number, ny: number) 
   };
 };
 
-// Enhanced function to prevent the target from moving too slowly
+// Drastically enhanced function to prevent the target from moving too slowly
 export const ensureMinimumSpeed = (dx: number, dy: number, minSpeed: number) => {
   const currentSpeed = Math.sqrt(dx * dx + dy * dy);
   if (currentSpeed < minSpeed) {
-    // INCREASED: Apply a stronger boost when speed is below minimum
+    // DRASTICALLY INCREASED: Apply a much stronger boost when speed is below minimum
     const angle = Math.atan2(dy, dx);
-    const boostMultiplier = 1.5; // Added boost multiplier
+    const boostMultiplier = 2.5; // Significantly increased boost multiplier
     return {
       dx: Math.cos(angle) * minSpeed * boostMultiplier,
       dy: Math.sin(angle) * minSpeed * boostMultiplier
@@ -73,10 +73,10 @@ export const ensureMinimumSpeed = (dx: number, dy: number, minSpeed: number) => 
   return { dx, dy };
 };
 
-// NEW: Add a function to apply random acceleration to prevent stale movement patterns
+// Improved random acceleration function with stronger effect
 export const applyRandomAcceleration = (dx: number, dy: number) => {
-  // Add random acceleration in a random direction
-  const accelerationMagnitude = 2 + Math.random() * 3; // Random acceleration between 2-5
+  // Add random acceleration in a random direction with higher magnitude
+  const accelerationMagnitude = 8 + Math.random() * 12; // Significantly increased (was 2-5)
   const accelerationAngle = Math.random() * 2 * Math.PI;
   
   return {
