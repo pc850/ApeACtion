@@ -1,5 +1,5 @@
 
-import { CircleUser } from 'lucide-react';
+import { Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BreastTarget from './BreastTarget';
 import { Position } from '@/hooks/useClickGame';
@@ -40,9 +40,13 @@ const MainCircle = ({
         background: 'linear-gradient(135deg, #FF69B4, #D946EF)',
       }}
     >
-      {/* Main Circle Icon/Content */}
+      {/* Main Circle Icon/Content - Using the provided avatar image */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <CircleUser className="w-32 h-32 text-white/80" />
+        <img 
+          src="/lovable-uploads/7d108e50-92ba-4ab1-b24f-7732c35cd587.png" 
+          alt="Avatar"
+          className="w-56 h-56 object-cover rounded-full"
+        />
       </div>
       
       {/* Breast Target */}
