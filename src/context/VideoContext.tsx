@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface Video {
@@ -29,91 +28,91 @@ interface VideoContextType {
 
 const VideoContext = createContext<VideoContextType | undefined>(undefined);
 
-// Mock video data - in a real app, this would come from an API
+// Updated mock video data with more mature-themed content for testing
 const mockVideos: Video[] = [
   {
     id: '1',
-    title: 'Summer Beach Vibes',
-    creator: 'BeachyQueen',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
+    title: 'Hot Tub Stream - Special Edition',
+    creator: 'CandyQueen',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1552663651-2e4250e6c7e8',
     videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    likes: 1542,
-    views: 12300,
+    likes: 4542,
+    views: 42300,
     isLive: true,
-    platform: 'StreamPlatform',
+    platform: 'AdultStream',
     creatorAvatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-    creatorId: 'beachy123',
-    chatCost: 5
+    creatorId: 'candy123',
+    chatCost: 25
   },
   {
     id: '2',
-    title: 'Sunset Meditation Session',
-    creator: 'ZenMaster',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1616627547584-bf28cee262db',
+    title: 'Bedroom Yoga Session 18+',
+    creator: 'FlexiGirl',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a',
     videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    likes: 982,
-    views: 8750,
+    likes: 3982,
+    views: 28750,
     isLive: false,
-    platform: 'StreamPlatform',
+    platform: 'AdultStream',
     creatorAvatar: 'https://randomuser.me/api/portraits/women/33.jpg',
-    creatorId: 'zen456',
-    chatCost: 10
+    creatorId: 'flexi456',
+    chatCost: 30
   },
   {
     id: '3',
-    title: 'Dance Tutorial - Summer Edition',
-    creator: 'DanceQueen',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7',
+    title: 'Intimate Dance Tutorial For Adults',
+    creator: 'DanceSeduction',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1545171709-47bd85caf3b0',
     videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-    likes: 2341,
-    views: 19800,
+    likes: 5341,
+    views: 39800,
     isLive: true,
-    platform: 'StreamPlatform',
+    platform: 'AdultStream',
     creatorAvatar: 'https://randomuser.me/api/portraits/women/22.jpg',
     creatorId: 'dance789',
-    chatCost: 8
+    chatCost: 40
   },
   {
     id: '4',
-    title: 'Morning Yoga Routine',
-    creator: 'YogaLover',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773',
+    title: 'Lingerie Try-On Haul',
+    creator: 'FashionSecret',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1583846783214-7229a91b20ed',
     videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-    likes: 1121,
-    views: 7650,
+    likes: 8121,
+    views: 67650,
     isLive: false,
-    platform: 'StreamPlatform',
+    platform: 'AdultStream',
     creatorAvatar: 'https://randomuser.me/api/portraits/women/55.jpg',
-    creatorId: 'yoga101',
-    chatCost: 15
+    creatorId: 'fashion101',
+    chatCost: 35
   },
   {
     id: '5',
-    title: 'Cooking with Style',
-    creator: 'ChefPrincess',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f',
+    title: 'After Dark Talk Show',
+    creator: 'NightOwl',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1504276048855-f3d60e69632f',
     videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-    likes: 3421,
-    views: 28500,
+    likes: 6421,
+    views: 58500,
     isLive: true,
-    platform: 'StreamPlatform',
+    platform: 'AdultStream',
     creatorAvatar: 'https://randomuser.me/api/portraits/women/66.jpg',
-    creatorId: 'chef202',
-    chatCost: 12
+    creatorId: 'night202',
+    chatCost: 45
   },
   {
     id: '6',
-    title: 'Gaming Stream Highlights',
+    title: 'Private Gaming Stream 21+',
     creator: 'GamerGirl',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1566577134770-3d85bb3a9cc4',
     videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-    likes: 4567,
-    views: 42300,
+    likes: 7567,
+    views: 72300,
     isLive: true,
-    platform: 'StreamPlatform',
+    platform: 'AdultStream',
     creatorAvatar: 'https://randomuser.me/api/portraits/women/77.jpg',
     creatorId: 'gamer303',
-    chatCost: 20
+    chatCost: 50
   },
 ];
 

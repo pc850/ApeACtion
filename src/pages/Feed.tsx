@@ -5,7 +5,7 @@ import VideoFeed from '@/components/VideoFeed';
 const Feed = () => {
   useEffect(() => {
     // Set page title
-    document.title = 'Video Feed | ClickNEarn';
+    document.title = 'Adult Video Feed | ClickNEarn';
   }, []);
   
   return (
