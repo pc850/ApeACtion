@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { createFloatingNumber } from '@/lib/animations';
@@ -42,6 +43,8 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
   const animationRef = useRef<number | null>(null);
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [roundsCompleted, setRoundsCompleted] = useState(0);
+  // Add a padding value to prevent edge glitches
+  const edgePadding = 5;
   
   const gameConfig: GameConfig = {
     maxTargets: 5, // User requested 5 targets per round
@@ -67,7 +70,8 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     const mainCircle = mainCircleRef.current.getBoundingClientRect();
     const centerX = mainCircle.width / 2;
     const centerY = mainCircle.height / 2;
-    const radius = (mainCircle.width / 2) * 0.8; // Stay within 80% of the radius to avoid touching the edge
+    // Reduce the usable radius to avoid spawning too close to the edge
+    const radius = (mainCircle.width / 2) * 0.7; 
     
     // Generate random angle and distance from center (within the radius)
     const angle = Math.random() * 2 * Math.PI;
@@ -80,14 +84,14 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     return { x, y };
   };
   
-  // Generate a random movement direction
+  // Generate a random movement direction with smoother velocity
   const generateRandomDirection = () => {
     const angle = Math.random() * 2 * Math.PI;
-    // Increase speed based on rounds completed
-    const currentSpeed = gameConfig.animationSpeed * speedMultiplier * (1 + (roundsCompleted * 0.2));
+    // Increase speed based on rounds completed, but ensure minimum speed
+    const baseSpeed = Math.max(1.5, gameConfig.animationSpeed * speedMultiplier * (1 + (roundsCompleted * 0.2)));
     return {
-      dx: Math.cos(angle) * currentSpeed,
-      dy: Math.sin(angle) * currentSpeed
+      dx: Math.cos(angle) * baseSpeed,
+      dy: Math.sin(angle) * baseSpeed
     };
   };
   
@@ -102,9 +106,19 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     // Make direction changes more frequent as rounds increase
     const changeInterval = Math.max(300, 1000 - (roundsCompleted * 100));
     const timer = setTimeout(() => {
-      setDirection(generateRandomDirection());
+      // Don't change direction too drastically to avoid glitches
+      const currentAngle = Math.atan2(direction.dy, direction.dx);
+      const angleChange = (Math.random() * Math.PI / 2) - Math.PI / 4; // Max 45 degrees change
+      const newAngle = currentAngle + angleChange;
+      
+      const newSpeed = Math.max(1.5, gameConfig.animationSpeed * speedMultiplier * (1 + (roundsCompleted * 0.2)));
+      setDirection({
+        dx: Math.cos(newAngle) * newSpeed,
+        dy: Math.sin(newAngle) * newSpeed
+      });
+      
       scheduleDirectionChange(); // Schedule the next change
-    }, changeInterval + Math.random() * 1000); // Change direction more frequently as game progresses
+    }, changeInterval + Math.random() * 1000);
     
     setChangeDirectionTimer(timer);
   };
@@ -121,22 +135,33 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     };
   }, [changeDirectionTimer]);
   
-  // Animate the target with the current direction - make it more erratic
+  // Smoother bounce algorithm for when the target hits the circle edge
+  const calculateBounce = (dx: number, dy: number, nx: number, ny: number) => {
+    // nx, ny is the normal vector to the edge
+    const dot = dx * nx + dy * ny;
+    return {
+      dx: dx - 2 * dot * nx,
+      dy: dy - 2 * dot * ny
+    };
+  };
+  
+  // Animate the target with the current direction - make it smoother on edges
   const animateTarget = () => {
     if (!mainCircleRef.current || !roundActive) return;
     
     const mainCircle = mainCircleRef.current.getBoundingClientRect();
     const centerX = mainCircle.width / 2;
     const centerY = mainCircle.height / 2;
-    const radius = (mainCircle.width / 2) * 0.8 - (gameConfig.targetSize / 2); // Adjust for target size
+    const radius = (mainCircle.width / 2) * 0.8 - (gameConfig.targetSize / 2) - edgePadding;
     
     // Add some random jitter to the movement for higher difficulties
-    const jitterFactor = Math.min(0.5, roundsCompleted * 0.1);
+    // Reduce jitter for smoother motion
+    const jitterFactor = Math.min(0.3, roundsCompleted * 0.05);
     const jitterX = (Math.random() * 2 - 1) * jitterFactor;
     const jitterY = (Math.random() * 2 - 1) * jitterFactor;
     
     setTargetPosition(prev => {
-      // Calculate new position with jitter
+      // Calculate new position with controlled jitter
       let newX = prev.x + direction.dx + jitterX;
       let newY = prev.y + direction.dy + jitterY;
       
@@ -147,28 +172,31 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       
       // If target would go outside the circle, bounce it back
       if (distance > radius) {
-        // Calculate the angle of the current position
-        const angle = Math.atan2(dy, dx);
+        // Calculate the normal vector to the circle at the point of intersection
+        const nx = dx / distance;
+        const ny = dy / distance;
         
-        // Create a new direction that bounces back - more chaotic at higher difficulty
-        const bounceRandomness = Math.min(0.4, roundsCompleted * 0.05);
-        const newDirection = {
-          dx: -direction.dx * (1 + (Math.random() * bounceRandomness - bounceRandomness/2)),
-          dy: -direction.dy * (1 + (Math.random() * bounceRandomness - bounceRandomness/2))
-        };
+        // Calculate the reflection using the normal vector
+        const bounce = calculateBounce(direction.dx, direction.dy, nx, ny);
         
-        // Update the direction
-        setDirection(newDirection);
+        // Update direction with slight randomness to prevent repetitive patterns
+        const randomFactor = 1 + (Math.random() * 0.2 - 0.1); // ±10% variation
+        setDirection({
+          dx: bounce.dx * randomFactor,
+          dy: bounce.dy * randomFactor
+        });
         
-        // Keep the target within the circle
-        newX = centerX + (radius - 2) * Math.cos(angle);
-        newY = centerY + (radius - 2) * Math.sin(angle);
+        // Place the target exactly at the edge of the valid area plus a bit inward
+        // to prevent getting stuck on the edge
+        const safeDistance = radius - 2;
+        newX = centerX + safeDistance * nx;
+        newY = centerY + safeDistance * ny;
       }
       
       return { x: newX, y: newY };
     });
     
-    // Ensure animation continues to run by immediately requesting next frame
+    // Always ensure animation continues to run by immediately requesting next frame
     animationRef.current = requestAnimationFrame(animateTarget);
   };
   

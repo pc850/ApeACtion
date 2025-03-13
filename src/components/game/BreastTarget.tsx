@@ -25,6 +25,7 @@ const BreastTarget = ({ position, size, onClick }: BreastTargetProps) => {
         height: `${size}px`,
         transform: 'translate(-50%, -50%)',
         boxShadow: '0 0 10px rgba(217, 70, 239, 0.5)',
+        pointerEvents: 'auto', // Ensure clicks are always detected
       }}
     >
       {/* Inner circle for nipple effect */}
