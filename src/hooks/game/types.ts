@@ -16,10 +16,21 @@ export interface GameState {
   consecutiveClicks: number;
   lastClickTime: number;
   scale: number;
+  currentLevel: number;
 }
 
 export interface GameConfig {
   maxTargets: number;
   animationSpeed: number;
   targetSize: number;
+  levels: LevelConfig[];
 }
+
+export interface LevelConfig {
+  level: number;
+  targetsRequired: number;
+  speedMultiplier: number;
+  targetSize: number;
+  description: string;
+}
+

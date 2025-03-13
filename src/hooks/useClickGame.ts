@@ -28,6 +28,8 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     showTarget: gameState.showTarget,
     speedMultiplier: gameState.speedMultiplier,
     roundsCompleted: gameState.roundsCompleted,
+    currentLevel: gameState.currentLevel,
+    getCurrentLevelConfig: gameState.getCurrentLevelConfig,
     mainCircleRef,
     gameConfig: gameState.gameConfig
   });
@@ -56,6 +58,9 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     return () => clearTimeout(resetTimer);
   }, [gameState.lastClickTime, gameState.consecutiveClicks]);
 
+  // Get current level configuration
+  const currentLevelConfig = gameState.getCurrentLevelConfig();
+
   return {
     gameState: {
       roundActive: gameState.roundActive,
@@ -65,9 +70,11 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       roundScore: gameState.roundScore,
       consecutiveClicks: gameState.consecutiveClicks,
       lastClickTime: gameState.lastClickTime,
-      scale: gameState.scale
+      scale: gameState.scale,
+      currentLevel: gameState.currentLevel
     },
     gameConfig: gameState.gameConfig,
+    currentLevelConfig,
     handleTargetClick: interactions.handleTargetClick,
     handleMainCircleClick: interactions.handleMainCircleClick
   };

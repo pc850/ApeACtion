@@ -27,7 +27,7 @@ export const generateRandomPosition = (mainCircleRef: React.RefObject<HTMLDivEle
 export const generateRandomDirection = (speedMultiplier: number, roundsCompleted: number) => {
   const angle = Math.random() * 2 * Math.PI;
   // Further increased minimum speed to ensure continuous fast movement
-  const baseSpeed = Math.max(15, 20 * speedMultiplier * (1 + (roundsCompleted * 0.2)));
+  const baseSpeed = Math.max(15, 20 * speedMultiplier * (1 + (roundsCompleted * 0.1)));
   return {
     dx: Math.cos(angle) * baseSpeed,
     dy: Math.sin(angle) * baseSpeed

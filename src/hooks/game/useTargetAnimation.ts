@@ -12,6 +12,8 @@ interface UseTargetAnimationProps {
   showTarget: boolean;
   speedMultiplier: number;
   roundsCompleted: number;
+  currentLevel: number;
+  getCurrentLevelConfig: () => any;
   mainCircleRef: React.RefObject<HTMLDivElement>;
   gameConfig: {
     targetSize: number;
@@ -31,6 +33,8 @@ export const useTargetAnimation = ({
   showTarget,
   speedMultiplier,
   roundsCompleted,
+  currentLevel,
+  getCurrentLevelConfig,
   mainCircleRef,
   gameConfig
 }: UseTargetAnimationProps) => {
@@ -45,18 +49,23 @@ export const useTargetAnimation = ({
       clearTimeout(changeDirectionTimer.current);
     }
     
+    // Get current level config
+    const levelConfig = getCurrentLevelConfig();
+    
     // Set a new timer to change direction randomly
     // More frequent direction changes for harder gameplay
-    const changeInterval = Math.max(100, 500 - (roundsCompleted * 100)); // Decreased from 150ms min to 100ms
+    const baseChangeInterval = 500 - (currentLevel * 75); // Decreases with level
+    const changeInterval = Math.max(100, baseChangeInterval - (roundsCompleted * 50)); // Decreased from 150ms min to 100ms
     const timer = setTimeout(() => {
       // Wider range of direction changes
       const currentAngle = Math.atan2(direction.dy, direction.dx);
       const angleChange = (Math.random() * Math.PI / 1.3) - Math.PI / 2.6; // Increased range of angle change
       const newAngle = currentAngle + angleChange;
       
-      // Apply higher speed
+      // Apply higher speed based on level
       const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
-      const newSpeed = Math.max(currentSpeed, gameConfig.animationSpeed * speedMultiplier * (1 + (roundsCompleted * 0.2)));
+      const levelSpeedMultiplier = levelConfig.speedMultiplier;
+      const newSpeed = Math.max(currentSpeed, gameConfig.animationSpeed * speedMultiplier * levelSpeedMultiplier);
       
       setDirection({
         dx: Math.cos(newAngle) * newSpeed,
@@ -73,26 +82,33 @@ export const useTargetAnimation = ({
   const animateTarget = () => {
     if (!mainCircleRef.current || !roundActive) return;
     
+    // Get current level config
+    const levelConfig = getCurrentLevelConfig();
+    const targetSize = levelConfig.targetSize; // Use level specific target size
+    
     const mainCircle = mainCircleRef.current.getBoundingClientRect();
     const centerX = mainCircle.width / 2;
     const centerY = mainCircle.height / 2;
     // Slightly increased safe area for better bounce detection
-    const radius = (mainCircle.width / 2) * 0.85 - (gameConfig.targetSize / 2) - EDGE_PADDING;
+    const radius = (mainCircle.width / 2) * 0.85 - (targetSize / 2) - EDGE_PADDING;
     
-    // Add random jitter for less predictable motion
-    const jitterFactor = Math.min(0.3, 0.15 + roundsCompleted * 0.02); // Increased jitter
+    // Add random jitter for less predictable motion - increases with level
+    const jitterFactor = Math.min(0.3, 0.15 + (currentLevel * 0.03) + (roundsCompleted * 0.01)); // Increased jitter
     const jitterX = (Math.random() * 2 - 1) * jitterFactor;
     const jitterY = (Math.random() * 2 - 1) * jitterFactor;
     
-    // Occasionally add sudden movement bursts - increased frequency
+    // Occasionally add sudden movement bursts - increased frequency with level
     const now = Date.now();
-    if (now - lastBounceTime.current > 800) { // Once per 800ms chance for speed burst
-      if (Math.random() < 0.15) { // 15% chance of sudden direction change
+    const burstInterval = Math.max(400, 800 - (currentLevel * 80)); // Shorter interval at higher levels
+    if (now - lastBounceTime.current > burstInterval) { // More frequent chance for speed burst
+      const burstChance = 0.15 + (currentLevel * 0.02); // Higher chance at higher levels
+      if (Math.random() < burstChance) { // Increased chance of sudden direction change
         const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
         const burstAngle = Math.random() * 2 * Math.PI;
+        const burstMultiplier = 1.4 + (currentLevel * 0.1); // Stronger bursts at higher levels
         setDirection({
-          dx: Math.cos(burstAngle) * currentSpeed * 1.4, // 40% faster
-          dy: Math.sin(burstAngle) * currentSpeed * 1.4
+          dx: Math.cos(burstAngle) * currentSpeed * burstMultiplier,
+          dy: Math.sin(burstAngle) * currentSpeed * burstMultiplier
         });
         lastBounceTime.current = now;
       }
@@ -100,9 +116,10 @@ export const useTargetAnimation = ({
     
     // Add a minimum speed check to ensure target never slows down
     const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
-    if (currentSpeed < gameConfig.animationSpeed * speedMultiplier) {
+    const minSpeedMultiplier = levelConfig.speedMultiplier * 1.1;
+    if (currentSpeed < gameConfig.animationSpeed * speedMultiplier * minSpeedMultiplier) {
       const currentAngle = Math.atan2(direction.dy, direction.dx);
-      const newSpeed = gameConfig.animationSpeed * speedMultiplier * 1.2; // Boost speed if it's too low
+      const newSpeed = gameConfig.animationSpeed * speedMultiplier * minSpeedMultiplier * 1.2; // Boost speed if it's too low
       setDirection({
         dx: Math.cos(currentAngle) * newSpeed,
         dy: Math.sin(currentAngle) * newSpeed
@@ -128,8 +145,8 @@ export const useTargetAnimation = ({
         // Calculate the reflection using the normal vector with improved bounce algorithm
         const bounce = calculateBounce(direction.dx, direction.dy, nx, ny);
         
-        // Update direction with randomness for unpredictable bounces
-        const randomFactor = 1 + (Math.random() * 0.3 - 0.15); // ±15% variation
+        // Update direction with randomness for unpredictable bounces - increased with level
+        const randomFactor = 1 + (Math.random() * (0.3 + currentLevel * 0.05) - 0.15); // More variation at higher levels
         setDirection({
           dx: bounce.dx * randomFactor,
           dy: bounce.dy * randomFactor

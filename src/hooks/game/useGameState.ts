@@ -18,12 +18,56 @@ export const useGameState = (mainCircleRef: React.RefObject<HTMLDivElement>) => 
   const [direction, setDirection] = useState({ dx: 0, dy: 0 });
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [roundsCompleted, setRoundsCompleted] = useState(0);
+  const [currentLevel, setCurrentLevel] = useState(1);
   
-  // Game configuration
+  // Game configuration with multiple levels
   const gameConfig: GameConfig = {
-    maxTargets: 5, // User requested 5 targets per round
+    maxTargets: 5, // Base targets per round
     animationSpeed: 20, // Base speed
-    targetSize: 48, // Size of the breast target in pixels
+    targetSize: 48, // Base size of the breast target in pixels
+    levels: [
+      {
+        level: 1,
+        targetsRequired: 5,
+        speedMultiplier: 1.0,
+        targetSize: 48,
+        description: "Beginner - Slow moving targets"
+      },
+      {
+        level: 2,
+        targetsRequired: 7,
+        speedMultiplier: 1.5,
+        targetSize: 42,
+        description: "Intermediate - Faster & smaller targets"
+      },
+      {
+        level: 3,
+        targetsRequired: 10,
+        speedMultiplier: 2.0,
+        targetSize: 38,
+        description: "Advanced - Fast & small targets"
+      },
+      {
+        level: 4,
+        targetsRequired: 12,
+        speedMultiplier: 2.5,
+        targetSize: 34,
+        description: "Expert - Very fast & tiny targets"
+      },
+      {
+        level: 5,
+        targetsRequired: 15,
+        speedMultiplier: 3.0,
+        targetSize: 30,
+        description: "Master - Extreme speed challenge"
+      }
+    ]
+  };
+  
+  // Get current level configuration
+  const getCurrentLevelConfig = () => {
+    const levelIndex = Math.min(currentLevel - 1, gameConfig.levels.length - 1);
+    return gameConfig.levels[levelIndex];
   };
   
   // Export all state and state setters
@@ -53,8 +97,11 @@ export const useGameState = (mainCircleRef: React.RefObject<HTMLDivElement>) => 
     setSpeedMultiplier,
     roundsCompleted,
     setRoundsCompleted,
+    currentLevel,
+    setCurrentLevel,
     
     // Config
-    gameConfig
+    gameConfig,
+    getCurrentLevelConfig
   };
 };

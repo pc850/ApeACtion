@@ -1,6 +1,6 @@
 
 import { Dispatch, SetStateAction, RefObject } from 'react';
-import { Position, GameConfig } from './types';
+import { Position, GameConfig, LevelConfig } from './types';
 import { generateRandomPosition, generateRandomDirection } from './animationUtils';
 import { calculateTokensEarned, displayTokensEarned } from './scoreUtils';
 import { createFloatingNumber } from '@/lib/animations';
@@ -17,6 +17,8 @@ export const startRound = (
   scheduleDirectionChange: () => void,
   animateTarget: () => void,
   roundsCompleted: number,
+  currentLevel: number,
+  getCurrentLevelConfig: () => LevelConfig,
   mainCircleRef: RefObject<HTMLDivElement>,
   animationRef: RefObject<number | null>
 ) => {
@@ -24,11 +26,15 @@ export const startRound = (
   setTargetsHit(0);
   setRoundScore(0);
   
-  // Set initial speed based on rounds completed, with higher minimum speed
-  setSpeedMultiplier(2.0 + (roundsCompleted * 0.4)); // Increased base multiplier
+  // Get current level config
+  const levelConfig = getCurrentLevelConfig();
   
-  // Generate initial direction and position with higher initial velocity
-  setDirection(generateRandomDirection(2.0 + (roundsCompleted * 0.4), roundsCompleted));
+  // Set initial speed based on level and rounds completed for added difficulty
+  const baseSpeedMultiplier = levelConfig.speedMultiplier + (roundsCompleted * 0.1);
+  setSpeedMultiplier(baseSpeedMultiplier);
+  
+  // Generate initial direction and position with level-based velocity
+  setDirection(generateRandomDirection(baseSpeedMultiplier, roundsCompleted));
   setTargetPosition(generateRandomPosition(mainCircleRef));
   setShowTarget(true);
   
@@ -56,6 +62,9 @@ export const handleTargetClick = (
   setTargetsHit: Dispatch<SetStateAction<number>>,
   targetsHit: number,
   gameConfig: GameConfig,
+  currentLevel: number,
+  getCurrentLevelConfig: () => LevelConfig,
+  setCurrentLevel: Dispatch<SetStateAction<number>>,
   setRoundsCompleted: Dispatch<SetStateAction<number>>,
   setSpeedMultiplier: Dispatch<SetStateAction<number>>,
   setTargetPosition: Dispatch<SetStateAction<Position>>,
@@ -64,6 +73,9 @@ export const handleTargetClick = (
   animateTarget: () => void
 ) => {
   e.stopPropagation();
+  
+  // Get current level config
+  const levelConfig = getCurrentLevelConfig();
   
   // Update scores
   const now = Date.now();
@@ -77,8 +89,9 @@ export const handleTargetClick = (
     setConsecutiveClicks(1);
   }
   
-  // Calculate tokens earned
-  const tokensEarned = calculateTokensEarned(consecutiveClicks);
+  // Calculate tokens earned with level bonus
+  const levelBonus = Math.max(1, Math.floor(currentLevel / 2)); // Higher levels give more tokens
+  const tokensEarned = calculateTokensEarned(consecutiveClicks) + levelBonus;
   
   // Create floating number animation
   displayTokensEarned(e, containerRef, tokensEarned);
@@ -88,18 +101,26 @@ export const handleTargetClick = (
   addTokens(tokensEarned);
   setTargetsHit(prev => prev + 1);
   
-  // Check if round is complete
-  if (targetsHit + 1 >= gameConfig.maxTargets) {
+  // Check if level is complete
+  if (targetsHit + 1 >= levelConfig.targetsRequired) {
     // Increase rounds completed counter
     setRoundsCompleted(prev => prev + 1);
+    
+    // Check if we should advance to the next level
+    if (currentLevel < gameConfig.levels.length) {
+      setCurrentLevel(prev => prev + 1);
+    }
     
     // Don't end the round, just reset targets hit and show a new target with increased difficulty
     setTimeout(() => {
       // Reset targets hit but keep the round active
       setTargetsHit(0);
       
+      // Get the new level config (may be the same level if we're at max)
+      const newLevelConfig = getCurrentLevelConfig();
+      
       // Increase speed significantly for the next round
-      setSpeedMultiplier(prev => prev + 1.0); // Increased from 0.8
+      setSpeedMultiplier(newLevelConfig.speedMultiplier + 0.5); // Additional boost
       
       // Generate a new position for the target
       setTargetPosition(generateRandomPosition(mainCircleRef));
@@ -110,10 +131,10 @@ export const handleTargetClick = (
       }
       // Call animateTarget which will set the ref internally
       animateTarget();
-    }, 100); // Further reduced delay for faster gameplay (from 200ms)
+    }, 100); // Short delay for faster gameplay
   } else {
     // Increase the speed multiplier for the next target
-    setSpeedMultiplier(prev => prev + 0.6); // Bigger speed boost
+    setSpeedMultiplier(prev => prev + 0.3);
     
     // Spawn a new target after a shorter delay
     setTimeout(() => {
@@ -125,7 +146,7 @@ export const handleTargetClick = (
       }
       // Call animateTarget which will set the ref internally
       animateTarget();
-    }, 100); // Even shorter delay for faster gameplay (from 150ms)
+    }, 100); // Even shorter delay for faster gameplay
   }
 };
 

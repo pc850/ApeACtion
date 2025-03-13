@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { useClickGame } from '@/hooks/useClickGame';
 import GameProgress from './game/GameProgress';
 import MainCircle from './game/MainCircle';
+import { Badge } from '@/components/ui/badge';
 
 const ClickToEarn = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -11,6 +12,7 @@ const ClickToEarn = () => {
   const { 
     gameState, 
     gameConfig, 
+    currentLevelConfig,
     handleTargetClick, 
     handleMainCircleClick 
   } = useClickGame(containerRef, mainCircleRef);
@@ -21,13 +23,15 @@ const ClickToEarn = () => {
       className="relative flex flex-col items-center justify-center w-full max-w-lg mx-auto h-[600px]"
     >
       <div className="text-center mb-8">
-        <span className="inline-block text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary mb-2">
-          Tap to Earn
-        </span>
+        {gameState.roundActive && (
+          <Badge variant="outline" className="mb-2 text-primary bg-primary/10 border-primary/20">
+            Level {gameState.currentLevel}: {currentLevelConfig.description}
+          </Badge>
+        )}
         <h1 className="text-3xl font-bold mb-1">Click & Earn Tokens</h1>
         <p className="text-muted-foreground">
           {gameState.roundActive 
-            ? `Hit ${gameConfig.maxTargets - gameState.targetsHit} more breast${gameConfig.maxTargets - gameState.targetsHit !== 1 ? "s" : ""} to complete this level!` 
+            ? `Hit ${currentLevelConfig.targetsRequired - gameState.targetsHit} more breast${currentLevelConfig.targetsRequired - gameState.targetsHit !== 1 ? "s" : ""} to complete this level!` 
             : "Tap the circle below to start!"
           }
         </p>
@@ -37,7 +41,7 @@ const ClickToEarn = () => {
       {gameState.roundActive && (
         <GameProgress 
           currentTargets={gameState.targetsHit} 
-          maxTargets={gameConfig.maxTargets} 
+          maxTargets={currentLevelConfig.targetsRequired}
         />
       )}
       
@@ -47,7 +51,7 @@ const ClickToEarn = () => {
         roundActive={gameState.roundActive}
         showTarget={gameState.showTarget}
         targetPosition={gameState.targetPosition}
-        targetSize={gameConfig.targetSize}
+        targetSize={currentLevelConfig ? currentLevelConfig.targetSize : gameConfig.targetSize}
         onCircleClick={handleMainCircleClick}
         onTargetClick={handleTargetClick}
         mainCircleRef={mainCircleRef}
@@ -57,7 +61,7 @@ const ClickToEarn = () => {
         <p>
           <span className="font-semibold text-xl">
             {gameState.roundActive 
-              ? "Click the moving breast target! It gets faster with each round!" 
+              ? "Click the moving breast target! It gets faster with each level!" 
               : "Tap to start a round!"
             }
           </span>

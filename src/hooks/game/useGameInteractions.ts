@@ -25,6 +25,9 @@ interface UseGameInteractionsProps {
     roundsCompleted: number;
     setRoundsCompleted: React.Dispatch<React.SetStateAction<number>>;
     speedMultiplier: number;
+    currentLevel: number;
+    setCurrentLevel: React.Dispatch<React.SetStateAction<number>>;
+    getCurrentLevelConfig: () => any;
   };
   animationControls: {
     scheduleDirectionChange: () => void;
@@ -57,6 +60,8 @@ export const useGameInteractions = ({
       animationControls.scheduleDirectionChange,
       animationControls.animateTarget,
       gameState.roundsCompleted,
+      gameState.currentLevel,
+      gameState.getCurrentLevelConfig,
       mainCircleRef,
       animationControls.animationRef
     );
@@ -76,6 +81,9 @@ export const useGameInteractions = ({
       gameState.setTargetsHit,
       gameState.targetsHit,
       gameConfig,
+      gameState.currentLevel,
+      gameState.getCurrentLevelConfig,
+      gameState.setCurrentLevel,
       gameState.setRoundsCompleted,
       gameState.setSpeedMultiplier,
       gameState.setTargetPosition,
