@@ -1,4 +1,3 @@
-
 import { Position } from '../types';
 import { 
   generateRandomDirection, 
@@ -18,7 +17,7 @@ export const animateTargetFrame = (
   targetSize: number,
   currentLevel: number,
   roundsCompleted: number,
-  jitterFactor: number = 0.4
+  jitterFactor: number = 0.1  // Reduced jitter for smoother motion
 ): {
   newPosition: Position;
   newDirection?: { dx: number; dy: number };
@@ -33,12 +32,12 @@ export const animateTargetFrame = (
   const centerY = mainCircle.height / 2;
   const radius = (mainCircle.width / 2) * 0.85 - (targetSize / 2) - EDGE_PADDING;
   
-  // Apply strong random jitter for constant visible motion
-  const jitterStrength = Math.min(1.0, jitterFactor + (currentLevel * 0.1) + (roundsCompleted * 0.05));
-  const jitterX = (Math.random() * 2 - 1) * jitterStrength * 1.5;
-  const jitterY = (Math.random() * 2 - 1) * jitterStrength * 1.5;
+  // Apply very minimal jitter to smooth out motion without vibration effect
+  const jitterStrength = Math.min(0.3, jitterFactor + (currentLevel * 0.02));
+  const jitterX = (Math.random() * 2 - 1) * jitterStrength;
+  const jitterY = (Math.random() * 2 - 1) * jitterStrength;
   
-  // Calculate new position with jitter
+  // Calculate new position with minimal jitter
   let newX = targetPosition.x + direction.dx + jitterX;
   let newY = targetPosition.y + direction.dy + jitterY;
   
@@ -59,15 +58,16 @@ export const animateTargetFrame = (
     // Calculate the reflection using the normal vector
     const bounce = calculateBounce(direction.dx, direction.dy, nx, ny);
     
-    // Higher random factor for more unpredictable bounces
-    const randomFactor = 1 + (Math.random() * (0.8 + currentLevel * 0.1) - 0.3);
+    // Add slight randomness to bounces to prevent predictable patterns
+    // but keep it minimal to avoid vibration effect
+    const randomFactor = 1 + (Math.random() * 0.2 - 0.1); // Just ±10% variation
     newDirection = {
       dx: bounce.dx * randomFactor,
       dy: bounce.dy * randomFactor
     };
     
     // Place the target exactly at the edge of the valid area plus a bit inward
-    const safeDistance = radius - 5;
+    const safeDistance = radius - 2;
     newX = centerX + safeDistance * nx;
     newY = centerY + safeDistance * ny;
     

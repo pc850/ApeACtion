@@ -1,7 +1,7 @@
 
 import { generateRandomDirection, applyRandomAcceleration, ensureMinimumSpeed } from '../animationUtils';
 
-// Function to schedule random direction changes
+// Function to schedule random direction changes - less frequent for smoother motion
 export const createDirectionChangeScheduler = (
   setDirection: React.Dispatch<React.SetStateAction<{ dx: number; dy: number }>>,
   direction: { dx: number; dy: number },
@@ -22,21 +22,22 @@ export const createDirectionChangeScheduler = (
     // Get current level config
     const levelConfig = getCurrentLevelConfig();
     
-    // Set a timer to change direction frequently
-    const baseChangeInterval = Math.max(200, 250 - (currentLevel * 75));
-    const changeInterval = Math.max(30, baseChangeInterval - (roundsCompleted * 50)); // Min 30ms
+    // Set a timer to change direction less frequently for smoother motion
+    const baseChangeInterval = Math.max(500, 700 - (currentLevel * 75));
+    const changeInterval = Math.max(300, baseChangeInterval - (roundsCompleted * 50));
     
     const timer = setTimeout(() => {
-      // Wider range of direction changes
+      // Smoother direction changes - smaller angle variations
       const currentAngle = Math.atan2(direction.dy, direction.dx);
-      const angleChange = (Math.random() * Math.PI) - Math.PI/2; 
+      const angleChange = (Math.random() * Math.PI/4) - Math.PI/8; // Smaller angle change (±22.5°)
       const newAngle = currentAngle + angleChange;
       
-      // Apply higher speed based on level
+      // Maintain more consistent speed for smoother motion
       const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
       const levelSpeedMultiplier = levelConfig.speedMultiplier;
-      const minSpeed = gameConfig.animationSpeed * speedMultiplier * levelSpeedMultiplier * 1.8;
-      const newSpeed = Math.max(currentSpeed, minSpeed);
+      const targetSpeed = gameConfig.animationSpeed * speedMultiplier * levelSpeedMultiplier;
+      // Blend between current and target speed for smoother transitions
+      const newSpeed = currentSpeed * 0.7 + targetSpeed * 0.3;
       
       setDirection({
         dx: Math.cos(newAngle) * newSpeed,
@@ -44,7 +45,7 @@ export const createDirectionChangeScheduler = (
       });
       
       scheduleDirectionChange(); // Schedule the next change
-    }, changeInterval + Math.random() * 50); // Less predictable timing
+    }, changeInterval);
     
     changeDirectionTimer = timer;
   };
@@ -56,7 +57,7 @@ export const createDirectionChangeScheduler = (
   };
 };
 
-// Utility to create a force movement checker that ensures target never stops
+// Utility to create a force movement checker - reduced frequency and strength
 export const createForceMovementChecker = (
   setDirection: React.Dispatch<React.SetStateAction<{ dx: number; dy: number }>>,
   direction: { dx: number; dy: number },
@@ -74,27 +75,42 @@ export const createForceMovementChecker = (
       clearInterval(forceMovementInterval);
     }
     
-    // Check frequently (every 20ms) to ensure constant motion
+    // Check less frequently for smoother motion
     const timer = setInterval(() => {
       if (!roundActive) return;
       
       const levelConfig = getCurrentLevelConfig();
-      const minRequiredSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier * 1.5;
+      const minRequiredSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier;
       
-      // Force acceleration randomly to create constant movement
-      if (Math.random() < 0.6) { // 60% chance each check
-        const acceleratedDirection = applyRandomAcceleration(direction.dx, direction.dy);
-        setDirection(acceleratedDirection);
+      // Apply gradual acceleration occasionally for smoother changes
+      if (Math.random() < 0.2) { // 20% chance each check - less frequent
+        const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
+        const angle = Math.atan2(direction.dy, direction.dx);
+        
+        // Apply a small acceleration in roughly the same direction
+        const angleVariation = (Math.random() * 0.5) - 0.25; // ±0.25 radians
+        const newAngle = angle + angleVariation;
+        const speedBoost = minRequiredSpeed * 0.1; // Small boost
+        
+        setDirection(prev => ({
+          dx: prev.dx + Math.cos(newAngle) * speedBoost,
+          dy: prev.dy + Math.sin(newAngle) * speedBoost
+        }));
       }
       
-      // Ensure target is moving at adequate speed
+      // Ensure target is moving at adequate speed, but with smoother transitions
       const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
-      if (currentSpeed < minRequiredSpeed) {
-        const newDirection = generateRandomDirection(speedMultiplier * 1.5, roundsCompleted);
-        setDirection(newDirection);
+      if (currentSpeed < minRequiredSpeed * 0.8) { // Only boost if significantly below target
+        const angle = Math.atan2(direction.dy, direction.dx);
+        const newSpeed = minRequiredSpeed * 1.2; // Boost to slightly above minimum
+        
+        setDirection({
+          dx: Math.cos(angle) * newSpeed,
+          dy: Math.sin(angle) * newSpeed
+        });
         lastMovementTime.current = Date.now();
       }
-    }, 20); // Check every 20ms
+    }, 150); // Check every 150ms for smoother motion
     
     forceMovementInterval = timer;
   };
@@ -105,7 +121,7 @@ export const createForceMovementChecker = (
   };
 };
 
-// Utility to create a stall detector that fixes stalled targets
+// Utility to create a stall detector - less aggressive fixes for smoother motion
 export const createStallDetector = (
   setDirection: React.Dispatch<React.SetStateAction<{ dx: number; dy: number }>>,
   setTargetPosition: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>,
@@ -128,7 +144,7 @@ export const createStallDetector = (
     // Initialize last position reference
     lastPositionRef.current = { ...targetPosition };
     
-    // Check position changes frequently
+    // Check position changes less frequently for smoother detection
     const timer = setInterval(() => {
       if (!roundActive || !showTarget) return;
       
@@ -137,27 +153,33 @@ export const createStallDetector = (
       const distY = Math.abs(targetPosition.y - lastPositionRef.current.y);
       const moved = Math.sqrt(distX * distX + distY * distY);
       
-      // If target hasn't moved significantly, force a drastic direction change
-      if (moved < 2) { // If moved less than 2 pixels, consider it stalled
+      // If target hasn't moved significantly, apply a gentle push rather than jerky fix
+      if (moved < 3) { // If moved less than 3 pixels, apply gentle correction
         const levelConfig = getCurrentLevelConfig();
-        const newSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier * 3.0;
-        const newAngle = Math.random() * 2 * Math.PI;
+        const newSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier;
+        
+        // Get current direction angle if any movement detected
+        let currentAngle = 0;
+        if (moved > 0.1) {
+          currentAngle = Math.atan2(targetPosition.y - lastPositionRef.current.y, 
+                                   targetPosition.x - lastPositionRef.current.x);
+        } else {
+          currentAngle = Math.random() * 2 * Math.PI; // Random if no movement
+        }
+        
+        // Apply a gentle push in roughly the same direction
+        const angleVariation = (Math.random() * 0.5) - 0.25; // ±0.25 radians
+        const newAngle = currentAngle + angleVariation;
         
         setDirection({
           dx: Math.cos(newAngle) * newSpeed,
           dy: Math.sin(newAngle) * newSpeed
         });
-        
-        // Apply immediate position change to break out of any potential stuck state
-        setTargetPosition(prev => ({
-          x: prev.x + Math.cos(newAngle) * 5,
-          y: prev.y + Math.sin(newAngle) * 5
-        }));
       }
       
       // Update the last position reference
       lastPositionRef.current = { ...targetPosition };
-    }, 50); // Check every 50ms
+    }, 100); // Check every 100ms
     
     stallDetectionInterval = timer;
   };
