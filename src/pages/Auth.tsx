@@ -33,7 +33,7 @@ const Auth = () => {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Welcome to ClickNEarn</CardTitle>
             <CardDescription>
-              Authentication feature has been removed
+              The wallet connect feature has been removed
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
@@ -42,7 +42,7 @@ const Auth = () => {
             </div>
             <div className="text-center mb-6 space-y-2">
               <p>
-                The wallet connect feature has been removed from this application.
+                The TON wallet connect feature has been completely removed from this application.
               </p>
             </div>
           </CardContent>

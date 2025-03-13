@@ -1,123 +1,40 @@
 
-import { TonConnectUI } from '@tonconnect/ui';
-import { supabase } from '@/integrations/supabase/client';
+// This file now contains a stub implementation since TON Connect has been removed
+// It exists only to satisfy imports until all references are removed from the codebase
 
-// Create a function to fetch manifest data from the database
 export const getManifestData = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('ton_config')
-      .select('*')
-      .order('id', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    
-    if (error) {
-      throw error;
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Error fetching TON manifest data:', error);
-    return null;
-  }
-};
-
-// Initialize TonConnect with proper configuration
-// Define parts of the URL separately to satisfy TypeScript's template literal type
-const protocol = "https";
-const domain = "kkddzgpenchcqjxyehep.supabase.co";
-const path = "/manifest.json";
-// Construct the URL in a way that TypeScript recognizes as `${string}://${string}`
-const manifestUrl = `${protocol}://${domain}${path}` as `${string}://${string}`;
-
-export const tonConnectUI = new TonConnectUI({
-  manifestUrl: manifestUrl,
-  actionsConfiguration: {
-    twaReturnUrl: window.location.origin,
-  },
-});
-
-// Update manifest URL after fetching data
-(async () => {
-  const manifestData = await getManifestData();
-  if (manifestData) {
-    // Create a manifest object to serve locally (in-memory)
-    const manifest = {
-      url: manifestData.url,
-      name: manifestData.name,
-      iconUrl: manifestData.icon_url,
-      termsOfUseUrl: manifestData.terms_of_use_url,
-      privacyPolicyUrl: manifestData.privacy_policy_url
-    };
-
-    // Convert to blob and create URL
-    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-    const manifestUrl = URL.createObjectURL(blob);
-    
-    // The TypeScript definition doesn't include updateConfig
-    // But it's documented in the library, so we use a type assertion
-    (tonConnectUI as any).updateConfig({
-      manifestUrl
-    });
-    
-    console.log('TON Connect manifest updated from database');
-  }
-})();
-
-export const getWalletAddress = (wallet: any): string | null => {
-  if (wallet && 'account' in wallet && wallet.account?.address) {
-    return wallet.account.address;
-  }
+  console.warn('TON Connect has been removed from this application.');
   return null;
 };
 
-// Extract Telegram ID and username if available
-export const getTelegramInfo = (wallet: any): { id?: number; username?: string } => {
-  if (wallet?.device?.platform === 'telegram') {
-    return {
-      id: wallet.device.appVersion,
-      username: wallet.device.appName
-    };
-  }
+export const tonConnectUI = {
+  connectWallet: () => {
+    console.warn('TON Connect has been removed from this application.');
+    return Promise.resolve(null);
+  },
+  getWallets: () => {
+    console.warn('TON Connect has been removed from this application.');
+    return Promise.resolve([]);
+  },
+  disconnect: () => {
+    console.warn('TON Connect has been removed from this application.');
+  },
+  onStatusChange: () => {
+    console.warn('TON Connect has been removed from this application.');
+    return { unsubscribe: () => {} };
+  },
+};
+
+export const getWalletAddress = () => {
+  console.warn('TON Connect has been removed from this application.');
+  return null;
+};
+
+export const getTelegramInfo = () => {
+  console.warn('TON Connect has been removed from this application.');
   return {};
 };
 
-// Store wallet connection in database
-export const storeWalletConnection = async (
-  walletAddress: string,
-  telegramId?: number,
-  telegramUsername?: string
-) => {
-  try {
-    // Generate a UUID for the new record if needed
-    const { data: existingConnection, error: fetchError } = await supabase
-      .from('wallet_connections')
-      .select('id')
-      .eq('wallet_address', walletAddress)
-      .maybeSingle();
-    
-    if (fetchError) {
-      console.error('Error checking existing wallet connection:', fetchError);
-    }
-
-    const connectionId = existingConnection?.id || crypto.randomUUID();
-    
-    const { error } = await supabase
-      .from('wallet_connections')
-      .upsert({
-        id: connectionId,
-        wallet_address: walletAddress,
-        telegram_id: telegramId,
-        username: telegramUsername,
-      }, {
-        onConflict: 'wallet_address'
-      });
-
-    if (error) {
-      console.error('Error storing wallet connection:', error);
-    }
-  } catch (error) {
-    console.error('Error in storeWalletConnection:', error);
-  }
+export const storeWalletConnection = async () => {
+  console.warn('TON Connect has been removed from this application.');
 };
