@@ -27,9 +27,9 @@ const BreastTarget = ({ position, size, onClick }: BreastTargetProps) => {
         pointerEvents: 'auto', // Ensure clicks are always detected
       }}
     >
-      {/* Use the provided breast cartoon image */}
+      {/* Use the provided breast image */}
       <img 
-        src="/lovable-uploads/56fe55c3-6006-450d-8d92-b7b4b0ce3fc9.png"
+        src="/lovable-uploads/94e1915d-9252-41d5-a4a0-ab6115956b7f.png"
         alt="Breast Target"
         className="w-full h-full object-contain"
       />
