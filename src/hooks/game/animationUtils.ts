@@ -23,27 +23,27 @@ export const generateRandomPosition = (mainCircleRef: React.RefObject<HTMLDivEle
 };
 
 // Generate a random movement direction with smoother velocity
-// Now 5x faster than before, with additional randomness
+// Now with guaranteed minimum speed to ensure constant motion
 export const generateRandomDirection = (speedMultiplier: number, roundsCompleted: number) => {
   const angle = Math.random() * 2 * Math.PI;
-  // Further increased minimum speed to ensure continuous fast movement
-  const baseSpeed = Math.max(15, 20 * speedMultiplier * (1 + (roundsCompleted * 0.1)));
+  // Further increased minimum speed to ensure continuous motion with no slow points
+  const baseSpeed = Math.max(25, 30 * speedMultiplier * (1 + (roundsCompleted * 0.15)));
   return {
     dx: Math.cos(angle) * baseSpeed,
     dy: Math.sin(angle) * baseSpeed
   };
 };
 
-// Improved bounce algorithm with more unpredictable behavior
+// Improved bounce algorithm with more unpredictable behavior and no slowing down
 export const calculateBounce = (dx: number, dy: number, nx: number, ny: number) => {
   // nx, ny is the normal vector to the edge
   const dot = dx * nx + dy * ny;
   
   // Apply speed boost after bouncing to prevent getting stuck and make it harder to click
-  const boostFactor = 1.25; // Increased from 1.15
+  const boostFactor = 1.35; // Increased from 1.25 to ensure constant motion
   
-  // Add slight randomness to bounce angle to make movement less predictable
-  const angleVariation = (Math.random() * 0.4) - 0.2; // ±20% angle variation (increased from 15%)
+  // Add increased randomness to bounce angle to make movement less predictable
+  const angleVariation = (Math.random() * 0.6) - 0.3; // ±30% angle variation (increased from 20%)
   const cosVar = Math.cos(angleVariation);
   const sinVar = Math.sin(angleVariation);
   
@@ -56,4 +56,17 @@ export const calculateBounce = (dx: number, dy: number, nx: number, ny: number) 
     dx: newDx * cosVar - newDy * sinVar,
     dy: newDx * sinVar + newDy * cosVar
   };
+};
+
+// New function to prevent the target from stopping or moving too slowly
+export const ensureMinimumSpeed = (dx: number, dy: number, minSpeed: number) => {
+  const currentSpeed = Math.sqrt(dx * dx + dy * dy);
+  if (currentSpeed < minSpeed) {
+    const angle = Math.atan2(dy, dx);
+    return {
+      dx: Math.cos(angle) * minSpeed,
+      dy: Math.sin(angle) * minSpeed
+    };
+  }
+  return { dx, dy };
 };
