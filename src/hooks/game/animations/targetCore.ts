@@ -32,14 +32,9 @@ export const animateTargetFrame = (
   const centerY = mainCircle.height / 2;
   const radius = (mainCircle.width / 2) * 0.85 - (targetSize / 2) - EDGE_PADDING;
   
-  // Apply very minimal jitter to smooth out motion without vibration effect
-  const jitterStrength = Math.min(0.3, jitterFactor + (currentLevel * 0.02));
-  const jitterX = (Math.random() * 2 - 1) * jitterStrength;
-  const jitterY = (Math.random() * 2 - 1) * jitterStrength;
-  
-  // Calculate new position with minimal jitter
-  let newX = targetPosition.x + direction.dx + jitterX;
-  let newY = targetPosition.y + direction.dy + jitterY;
+  // Calculate new position with direct movement - no jitter
+  let newX = targetPosition.x + direction.dx;
+  let newY = targetPosition.y + direction.dy;
   
   // Calculate distance from center
   const dx = newX - centerX;
@@ -49,7 +44,7 @@ export const animateTargetFrame = (
   let newDirection;
   let didBounce = false;
   
-  // If target would go outside the circle, bounce it back with improved detection
+  // If target would go outside the circle, bounce it back
   if (distance > radius) {
     // Calculate the normal vector to the circle at the point of intersection
     const nx = dx / distance;
@@ -58,16 +53,15 @@ export const animateTargetFrame = (
     // Calculate the reflection using the normal vector
     const bounce = calculateBounce(direction.dx, direction.dy, nx, ny);
     
-    // Add slight randomness to bounces to prevent predictable patterns
-    // but keep it minimal to avoid vibration effect
-    const randomFactor = 1 + (Math.random() * 0.2 - 0.1); // Just ±10% variation
+    // Apply a slight energy boost on bounce to keep movement exciting
+    const boostFactor = 1.05;
     newDirection = {
-      dx: bounce.dx * randomFactor,
-      dy: bounce.dy * randomFactor
+      dx: bounce.dx * boostFactor,
+      dy: bounce.dy * boostFactor
     };
     
     // Place the target exactly at the edge of the valid area plus a bit inward
-    const safeDistance = radius - 2;
+    const safeDistance = radius - 1;
     newX = centerX + safeDistance * nx;
     newY = centerY + safeDistance * ny;
     
