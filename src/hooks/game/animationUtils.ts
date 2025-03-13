@@ -27,7 +27,7 @@ export const generateRandomPosition = (mainCircleRef: React.RefObject<HTMLDivEle
 export const generateRandomDirection = (speedMultiplier: number, roundsCompleted: number) => {
   const angle = Math.random() * 2 * Math.PI;
   // Further increased minimum speed to ensure continuous fast movement
-  const baseSpeed = Math.max(10, 15 * speedMultiplier * (1 + (roundsCompleted * 0.2)));
+  const baseSpeed = Math.max(15, 20 * speedMultiplier * (1 + (roundsCompleted * 0.2)));
   return {
     dx: Math.cos(angle) * baseSpeed,
     dy: Math.sin(angle) * baseSpeed
@@ -40,10 +40,10 @@ export const calculateBounce = (dx: number, dy: number, nx: number, ny: number) 
   const dot = dx * nx + dy * ny;
   
   // Apply speed boost after bouncing to prevent getting stuck and make it harder to click
-  const boostFactor = 1.15; // Increased from 1.05
+  const boostFactor = 1.25; // Increased from 1.15
   
   // Add slight randomness to bounce angle to make movement less predictable
-  const angleVariation = (Math.random() * 0.3) - 0.15; // ±15% angle variation
+  const angleVariation = (Math.random() * 0.4) - 0.2; // ±20% angle variation (increased from 15%)
   const cosVar = Math.cos(angleVariation);
   const sinVar = Math.sin(angleVariation);
   

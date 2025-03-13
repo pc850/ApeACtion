@@ -1,3 +1,4 @@
+
 import { Dispatch, SetStateAction, RefObject } from 'react';
 import { Position, GameConfig } from './types';
 import { generateRandomPosition, generateRandomDirection } from './animationUtils';
@@ -24,10 +25,10 @@ export const startRound = (
   setRoundScore(0);
   
   // Set initial speed based on rounds completed, with higher minimum speed
-  setSpeedMultiplier(1.5 + (roundsCompleted * 0.4));
+  setSpeedMultiplier(2.0 + (roundsCompleted * 0.4)); // Increased base multiplier
   
   // Generate initial direction and position with higher initial velocity
-  setDirection(generateRandomDirection(1.5 + (roundsCompleted * 0.4), roundsCompleted));
+  setDirection(generateRandomDirection(2.0 + (roundsCompleted * 0.4), roundsCompleted));
   setTargetPosition(generateRandomPosition(mainCircleRef));
   setShowTarget(true);
   
@@ -38,7 +39,7 @@ export const startRound = (
   if (animationRef.current !== null) {
     cancelAnimationFrame(animationRef.current);
   }
-  // Call animateTarget which will set animationRef.current internally
+  // Call animateTarget which will set animationRef internally
   animateTarget();
 };
 
@@ -98,33 +99,33 @@ export const handleTargetClick = (
       setTargetsHit(0);
       
       // Increase speed significantly for the next round
-      setSpeedMultiplier(prev => prev + 0.8);
+      setSpeedMultiplier(prev => prev + 1.0); // Increased from 0.8
       
       // Generate a new position for the target
       setTargetPosition(generateRandomPosition(mainCircleRef));
       
-      // Keep animation running - Fix: Don't directly modify the ref
+      // Reset animation but don't directly modify the ref.current
       if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current);
       }
       // Call animateTarget which will set the ref internally
       animateTarget();
-    }, 200); // Reduced delay for faster gameplay
+    }, 100); // Further reduced delay for faster gameplay (from 200ms)
   } else {
     // Increase the speed multiplier for the next target
-    setSpeedMultiplier(prev => prev + 0.5); // Bigger speed boost
+    setSpeedMultiplier(prev => prev + 0.6); // Bigger speed boost
     
     // Spawn a new target after a shorter delay
     setTimeout(() => {
       setTargetPosition(generateRandomPosition(mainCircleRef));
       
-      // Ensure animation continues - Fix: Don't directly modify the ref
+      // Ensure animation continues
       if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current);
       }
       // Call animateTarget which will set the ref internally
       animateTarget();
-    }, 150); // Even shorter delay for faster gameplay
+    }, 100); // Even shorter delay for faster gameplay (from 150ms)
   }
 };
 

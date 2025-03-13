@@ -16,7 +16,7 @@ import {
 // Add a padding value to prevent edge glitches
 const EDGE_PADDING = 5;
 
-// Re-export types correctly with 'export type'
+// Correctly re-export types with 'export type'
 export type { Position, GameState, GameConfig };
 
 export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, mainCircleRef: React.RefObject<HTMLDivElement>) => {
@@ -40,7 +40,7 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
   
   const gameConfig: GameConfig = {
     maxTargets: 5, // User requested 5 targets per round
-    animationSpeed: 15, // Base speed increased further, from 10 to 15
+    animationSpeed: 20, // Base speed increased further, from 15 to 20
     targetSize: 48, // Size of the breast target in pixels
   };
 
@@ -64,22 +64,24 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     
     // Set a new timer to change direction randomly
     // More frequent direction changes for harder gameplay
-    const changeInterval = Math.max(150, 600 - (roundsCompleted * 100));
+    const changeInterval = Math.max(100, 500 - (roundsCompleted * 100)); // Decreased from 150ms min to 100ms
     const timer = setTimeout(() => {
       // Wider range of direction changes
       const currentAngle = Math.atan2(direction.dy, direction.dx);
-      const angleChange = (Math.random() * Math.PI / 1.5) - Math.PI / 3; // Max 60 degrees change
+      const angleChange = (Math.random() * Math.PI / 1.3) - Math.PI / 2.6; // Increased range of angle change
       const newAngle = currentAngle + angleChange;
       
       // Apply higher speed
-      const newSpeed = Math.max(10, gameConfig.animationSpeed * speedMultiplier * (1 + (roundsCompleted * 0.2)));
+      const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
+      const newSpeed = Math.max(currentSpeed, gameConfig.animationSpeed * speedMultiplier * (1 + (roundsCompleted * 0.2)));
+      
       setDirection({
         dx: Math.cos(newAngle) * newSpeed,
         dy: Math.sin(newAngle) * newSpeed
       });
       
       scheduleDirectionChange(); // Schedule the next change
-    }, changeInterval + Math.random() * 300); // Less predictable timing
+    }, changeInterval + Math.random() * 200); // Less predictable timing (reduced from 300ms max additional)
     
     setChangeDirectionTimer(timer);
   };
@@ -107,22 +109,33 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     const radius = (mainCircle.width / 2) * 0.85 - (gameConfig.targetSize / 2) - EDGE_PADDING;
     
     // Add random jitter for less predictable motion
-    const jitterFactor = Math.min(0.2, 0.1 + roundsCompleted * 0.02);
+    const jitterFactor = Math.min(0.3, 0.15 + roundsCompleted * 0.02); // Increased jitter
     const jitterX = (Math.random() * 2 - 1) * jitterFactor;
     const jitterY = (Math.random() * 2 - 1) * jitterFactor;
     
-    // Occasionally add sudden movement bursts
+    // Occasionally add sudden movement bursts - increased frequency
     const now = Date.now();
-    if (now - lastBounceTime.current > 1000) { // Once per second chance for speed burst
-      if (Math.random() < 0.1) { // 10% chance of sudden direction change
+    if (now - lastBounceTime.current > 800) { // Once per 800ms chance for speed burst (down from 1000ms)
+      if (Math.random() < 0.15) { // 15% chance of sudden direction change (up from 10%)
         const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
         const burstAngle = Math.random() * 2 * Math.PI;
         setDirection({
-          dx: Math.cos(burstAngle) * currentSpeed * 1.3, // 30% faster
-          dy: Math.sin(burstAngle) * currentSpeed * 1.3
+          dx: Math.cos(burstAngle) * currentSpeed * 1.4, // 40% faster (up from 30%)
+          dy: Math.sin(burstAngle) * currentSpeed * 1.4
         });
         lastBounceTime.current = now;
       }
+    }
+    
+    // Add a minimum speed check to ensure target never slows down
+    const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
+    if (currentSpeed < gameConfig.animationSpeed * speedMultiplier) {
+      const currentAngle = Math.atan2(direction.dy, direction.dx);
+      const newSpeed = gameConfig.animationSpeed * speedMultiplier * 1.2; // Boost speed if it's too low
+      setDirection({
+        dx: Math.cos(currentAngle) * newSpeed,
+        dy: Math.sin(currentAngle) * newSpeed
+      });
     }
     
     setTargetPosition(prev => {
@@ -145,7 +158,7 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
         const bounce = calculateBounce(direction.dx, direction.dy, nx, ny);
         
         // Update direction with randomness for unpredictable bounces
-        const randomFactor = 1 + (Math.random() * 0.2 - 0.1); // ±10% variation
+        const randomFactor = 1 + (Math.random() * 0.3 - 0.15); // ±15% variation (up from 10%)
         setDirection({
           dx: bounce.dx * randomFactor,
           dy: bounce.dy * randomFactor
@@ -163,7 +176,7 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       return { x: newX, y: newY };
     });
     
-    // Request next animation frame
+    // Request next animation frame - store reference so we can cancel it later
     animationRef.current = requestAnimationFrame(animateTarget);
   };
   
@@ -188,7 +201,7 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     );
   };
   
-  // Start animation when target becomes visible or when round is active
+  // Ensure animation continues even when component re-renders
   useEffect(() => {
     if (showTarget && roundActive) {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
