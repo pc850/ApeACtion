@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from 'react';
 import { Position } from '../types';
 import { generateRandomDirection } from '../animationUtils';
@@ -73,6 +72,7 @@ export const useTargetAnimation = ({
     setDirection,
     setTargetPosition,
     targetPosition,
+    direction,
     roundActive,
     showTarget,
     getCurrentLevelConfig,

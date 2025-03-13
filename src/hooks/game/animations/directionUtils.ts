@@ -1,3 +1,4 @@
+
 import { generateRandomDirection, ensureMinimumSpeed } from '../animationUtils';
 
 // Function to schedule random direction changes - reduced for DVD-like movement
@@ -81,6 +82,7 @@ export const createStallDetector = (
   setDirection: React.Dispatch<React.SetStateAction<{ dx: number; dy: number }>>,
   setTargetPosition: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>,
   targetPosition: { x: number; y: number },
+  direction: { dx: number; dy: number }, // Added missing direction parameter
   roundActive: boolean,
   showTarget: boolean,
   getCurrentLevelConfig: () => any,
