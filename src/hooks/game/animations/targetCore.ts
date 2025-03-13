@@ -1,3 +1,4 @@
+
 import { Position } from '../types';
 import { 
   generateRandomDirection, 
@@ -32,7 +33,7 @@ export const animateTargetFrame = (
   const centerY = mainCircle.height / 2;
   const radius = (mainCircle.width / 2) * 0.85 - (targetSize / 2) - EDGE_PADDING;
   
-  // Calculate new position with direct movement - no jitter
+  // Calculate new position with a constant, predictable movement (DVD-like)
   let newX = targetPosition.x + direction.dx;
   let newY = targetPosition.y + direction.dy;
   
@@ -41,10 +42,10 @@ export const animateTargetFrame = (
   const dy = newY - centerY;
   const distance = Math.sqrt(dx * dx + dy * dy);
   
-  let newDirection;
+  let newDirection = { ...direction };
   let didBounce = false;
   
-  // If target would go outside the circle, bounce it back
+  // If target would go outside the circle, bounce it back like DVD logo
   if (distance > radius) {
     // Calculate the normal vector to the circle at the point of intersection
     const nx = dx / distance;
@@ -53,14 +54,14 @@ export const animateTargetFrame = (
     // Calculate the reflection using the normal vector
     const bounce = calculateBounce(direction.dx, direction.dy, nx, ny);
     
-    // Apply a slight energy boost on bounce to keep movement exciting
-    const boostFactor = 1.05;
+    // Apply a slight energy preservation on bounce (DVD-like)
+    const preservationFactor = 1.0; // Keep exact same speed after bounce
     newDirection = {
-      dx: bounce.dx * boostFactor,
-      dy: bounce.dy * boostFactor
+      dx: bounce.dx * preservationFactor,
+      dy: bounce.dy * preservationFactor
     };
     
-    // Place the target exactly at the edge of the valid area plus a bit inward
+    // Place the target exactly at the edge of the valid area
     const safeDistance = radius - 1;
     newX = centerX + safeDistance * nx;
     newY = centerY + safeDistance * ny;

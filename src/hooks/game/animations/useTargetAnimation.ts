@@ -1,3 +1,4 @@
+
 import { useRef, useEffect } from 'react';
 import { Position } from '../types';
 import { generateRandomDirection } from '../animationUtils';
@@ -85,40 +86,11 @@ export const useTargetAnimation = ({
   const animateTarget = () => {
     if (!mainCircleRef.current || !roundActive) return;
     
-    // Check time since last position update
-    const now = Date.now();
-    const timeSinceLastUpdate = now - lastMovementTime.current;
-    
-    // If no motion for more than 50ms, force a strong direction change
-    if (timeSinceLastUpdate > 50) {
-      const levelConfig = getCurrentLevelConfig();
-      const minSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier * 3.0;
-      const newDirection = generateRandomDirection(speedMultiplier * 3.0, roundsCompleted);
-      setDirection(newDirection);
-      lastMovementTime.current = now;
-    }
-    
     // Get current level config
     const levelConfig = getCurrentLevelConfig();
     const targetSize = levelConfig.targetSize;
     
-    // More frequent sudden movement bursts
-    const burstInterval = Math.max(100, 300 - (currentLevel * 80));
-    if (now - lastBounceTime.current > burstInterval) {
-      const burstChance = 0.5 + (currentLevel * 0.1);
-      if (Math.random() < burstChance) {
-        const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
-        const burstAngle = Math.random() * 2 * Math.PI;
-        const burstMultiplier = 2.5 + (currentLevel * 0.25);
-        setDirection({
-          dx: Math.cos(burstAngle) * currentSpeed * burstMultiplier,
-          dy: Math.sin(burstAngle) * currentSpeed * burstMultiplier
-        });
-        lastBounceTime.current = now;
-      }
-    }
-    
-    // Calculate new position and handle bouncing
+    // DVD-like animation - constant predictable movement with bounces
     const result = animateTargetFrame(
       targetPosition,
       direction,
@@ -134,11 +106,11 @@ export const useTargetAnimation = ({
     // If we had a bounce, update direction
     if (result.didBounce && result.newDirection) {
       setDirection(result.newDirection);
-      lastBounceTime.current = now;
+      lastBounceTime.current = Date.now();
     }
     
     // Update last movement time
-    lastMovementTime.current = now;
+    lastMovementTime.current = Date.now();
     
     // Request next animation frame
     animationRef.current = requestAnimationFrame(animateTarget);
