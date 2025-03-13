@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction, RefObject } from 'react';
 import { Position, GameConfig } from './types';
 import { generateRandomPosition, generateRandomDirection } from './animationUtils';
 import { calculateTokensEarned, displayTokensEarned } from './scoreUtils';
+import { createFloatingNumber } from '@/lib/animations';
 
 // Start a new round of the game
 export const startRound = (
@@ -33,9 +34,12 @@ export const startRound = (
   // Schedule direction changes
   scheduleDirectionChange();
   
-  // Start the animation
-  if (animationRef.current) cancelAnimationFrame(animationRef.current);
-  animationRef.current = requestAnimationFrame(animateTarget);
+  // Start the animation - Fix: Don't directly modify the ref
+  if (animationRef.current !== null && typeof animationRef.current === 'number') {
+    cancelAnimationFrame(animationRef.current);
+  }
+  // Call animateTarget which will set animationRef.current internally
+  animateTarget();
 };
 
 // Handle clicking on the breast target
@@ -99,9 +103,12 @@ export const handleTargetClick = (
       // Generate a new position for the target
       setTargetPosition(generateRandomPosition(mainCircleRef));
       
-      // Keep animation running - important!
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      animationRef.current = requestAnimationFrame(animateTarget);
+      // Keep animation running - Fix: Don't directly modify the ref
+      if (animationRef.current !== null && typeof animationRef.current === 'number') {
+        cancelAnimationFrame(animationRef.current);
+      }
+      // Call animateTarget which will set the ref internally
+      animateTarget();
     }, 300);
   } else {
     // Increase the speed multiplier for the next target
@@ -111,9 +118,12 @@ export const handleTargetClick = (
     setTimeout(() => {
       setTargetPosition(generateRandomPosition(mainCircleRef));
       
-      // Ensure animation continues - critical for movement
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      animationRef.current = requestAnimationFrame(animateTarget);
+      // Ensure animation continues - Fix: Don't directly modify the ref
+      if (animationRef.current !== null && typeof animationRef.current === 'number') {
+        cancelAnimationFrame(animationRef.current);
+      }
+      // Call animateTarget which will set the ref internally
+      animateTarget();
     }, 200); // Reduced delay for faster gameplay
   }
 };

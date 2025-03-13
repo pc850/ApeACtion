@@ -16,7 +16,8 @@ import {
 // Add a padding value to prevent edge glitches
 const EDGE_PADDING = 5;
 
-export { Position, GameState, GameConfig };
+// Re-export types correctly with 'export type'
+export type { Position, GameState, GameConfig };
 
 export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, mainCircleRef: React.RefObject<HTMLDivElement>) => {
   const { addTokens } = useTokens();
