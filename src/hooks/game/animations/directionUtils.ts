@@ -1,7 +1,6 @@
+import { generateRandomDirection, ensureMinimumSpeed } from '../animationUtils';
 
-import { generateRandomDirection, applyRandomAcceleration, ensureMinimumSpeed } from '../animationUtils';
-
-// Function to schedule random direction changes
+// Function to schedule random direction changes - reduced for DVD-like movement
 export const createDirectionChangeScheduler = (
   setDirection: React.Dispatch<React.SetStateAction<{ dx: number; dy: number }>>,
   direction: { dx: number; dy: number },
@@ -13,29 +12,16 @@ export const createDirectionChangeScheduler = (
 ) => {
   let changeDirectionTimer: NodeJS.Timeout | null = null;
   
+  // For DVD-like movement, we don't randomly change direction
+  // This function now only schedules direction changes for level progression
   const scheduleDirectionChange = () => {
     // Clear any existing timer
     if (changeDirectionTimer) {
       clearTimeout(changeDirectionTimer);
     }
     
-    // Get current level config
-    const levelConfig = getCurrentLevelConfig();
-    
-    // Set a timer to change direction occasionally
-    const baseChangeInterval = Math.max(1000, 2000 - (currentLevel * 200));
-    const changeInterval = Math.max(800, baseChangeInterval - (roundsCompleted * 100));
-    
-    const timer = setTimeout(() => {
-      // Get a completely new direction periodically for more dynamic movement
-      const levelSpeedMultiplier = levelConfig.speedMultiplier;
-      const newDirection = generateRandomDirection(speedMultiplier * levelSpeedMultiplier, roundsCompleted);
-      setDirection(newDirection);
-      
-      scheduleDirectionChange(); // Schedule the next change
-    }, changeInterval);
-    
-    changeDirectionTimer = timer;
+    // We'll keep this function but make it a no-op for DVD movement
+    // It will only be used when explicitly called for level progression
   };
   
   return {
@@ -70,13 +56,16 @@ export const createForceMovementChecker = (
       
       // Ensure target is moving at adequate speed
       const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
-      if (currentSpeed < minRequiredSpeed) {
-        // If speed is too low, give it a new direction with proper speed
-        const newDirection = generateRandomDirection(speedMultiplier, roundsCompleted);
-        setDirection(newDirection);
+      if (currentSpeed < minRequiredSpeed * 0.8) {
+        // If speed is too low, adjust speed but maintain direction
+        const angle = Math.atan2(direction.dy, direction.dx);
+        setDirection({
+          dx: Math.cos(angle) * minRequiredSpeed,
+          dy: Math.sin(angle) * minRequiredSpeed
+        });
         lastMovementTime.current = Date.now();
       }
-    }, 300);
+    }, 500);
     
     forceMovementInterval = timer;
   };
@@ -119,19 +108,21 @@ export const createStallDetector = (
       const distY = Math.abs(targetPosition.y - lastPositionRef.current.y);
       const moved = Math.sqrt(distX * distX + distY * distY);
       
-      // If target hasn't moved significantly, give it a new direction
-      if (moved < 5) {
-        const levelConfig = getCurrentLevelConfig();
-        const baseSpeed = gameConfig.animationSpeed * speedMultiplier * levelConfig.speedMultiplier;
+      // If target hasn't moved significantly, maintain its direction but increase speed
+      if (moved < 2) {
+        const currentSpeed = Math.sqrt(direction.dx * direction.dx + direction.dy * direction.dy);
+        const angle = Math.atan2(direction.dy, direction.dx);
         
-        // Create a stronger movement if stalled
-        const newDirection = generateRandomDirection(speedMultiplier * 2, roundsCompleted);
-        setDirection(newDirection);
+        // Maintain direction but increase speed
+        setDirection({
+          dx: Math.cos(angle) * currentSpeed * 1.1,
+          dy: Math.sin(angle) * currentSpeed * 1.1
+        });
       }
       
       // Update the last position reference
       lastPositionRef.current = { ...targetPosition };
-    }, 200);
+    }, 300);
     
     stallDetectionInterval = timer;
   };

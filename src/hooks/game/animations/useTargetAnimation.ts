@@ -45,7 +45,7 @@ export const useTargetAnimation = ({
   const lastBounceTime = useRef(0);
   const lastMovementTime = useRef(Date.now());
   
-  // Direction change controller
+  // Direction change controller - no random changes for DVD movement
   const { scheduleDirectionChange, changeDirectionTimer } = createDirectionChangeScheduler(
     setDirection,
     direction,
@@ -56,7 +56,7 @@ export const useTargetAnimation = ({
     speedMultiplier
   );
   
-  // Force movement controller
+  // Force movement controller - adjusted for DVD-like movement
   const { setupForceMovementCheck, forceMovementInterval } = createForceMovementChecker(
     setDirection,
     direction,
@@ -68,7 +68,7 @@ export const useTargetAnimation = ({
     lastMovementTime
   );
   
-  // Stall detection controller
+  // Stall detection controller - adjusted for DVD-like movement
   const { setupStallDetection, stallDetectionInterval, lastPositionRef } = createStallDetector(
     setDirection,
     setTargetPosition,
@@ -82,7 +82,7 @@ export const useTargetAnimation = ({
     roundsCompleted
   );
   
-  // The main animation function
+  // The main animation function - pure DVD-like animation
   const animateTarget = () => {
     if (!mainCircleRef.current || !roundActive || !showTarget) return;
     
@@ -90,7 +90,7 @@ export const useTargetAnimation = ({
     const levelConfig = getCurrentLevelConfig();
     const targetSize = levelConfig.targetSize;
     
-    // DVD-like animation - constant predictable movement with bounces
+    // DVD-like animation - constant predictable movement with perfect bounces
     const result = animateTargetFrame(
       targetPosition,
       direction,

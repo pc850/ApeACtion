@@ -25,8 +25,8 @@ export const generateRandomPosition = (mainCircleRef: React.RefObject<HTMLDivEle
 // Generate a random movement direction with proper velocity
 export const generateRandomDirection = (speedMultiplier: number, roundsCompleted: number) => {
   const angle = Math.random() * 2 * Math.PI;
-  // Reduce the base speed for more manageable movement
-  const baseSpeed = 0.8 + (Math.min(roundsCompleted, 10) * 0.05); 
+  // Use fixed base speed for predictable movement
+  const baseSpeed = 1.2;
   const speed = baseSpeed * speedMultiplier;
   
   return {
@@ -60,8 +60,7 @@ export const ensureMinimumSpeed = (dx: number, dy: number, minSpeed: number) => 
   return { dx, dy };
 };
 
-// Random acceleration function - Not used for DVD-like movement
+// No random acceleration for DVD-like movement
 export const applyRandomAcceleration = (dx: number, dy: number) => {
-  // No random acceleration for DVD-like movement
   return { dx, dy };
 };

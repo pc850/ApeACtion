@@ -1,8 +1,7 @@
 
 import { Position } from '../types';
 import { 
-  generateRandomDirection, 
-  calculateBounce, 
+  calculateBounce,
   ensureMinimumSpeed
 } from '../animationUtils';
 
@@ -17,7 +16,7 @@ export const animateTargetFrame = (
   targetSize: number,
   currentLevel: number,
   roundsCompleted: number,
-  jitterFactor: number = 0  // Remove jitter completely for perfect DVD-like movement
+  jitterFactor: number = 0  // No jitter for perfect DVD-like movement
 ): {
   newPosition: Position;
   newDirection?: { dx: number; dy: number };
@@ -32,7 +31,7 @@ export const animateTargetFrame = (
   const centerY = mainCircle.height / 2;
   const radius = (mainCircle.width / 2) * 0.85 - (targetSize / 2) - EDGE_PADDING;
   
-  // Calculate new position with a constant, predictable movement (DVD-like)
+  // Calculate new position with constant, predictable movement
   const newX = targetPosition.x + direction.dx;
   const newY = targetPosition.y + direction.dy;
   
@@ -57,8 +56,8 @@ export const animateTargetFrame = (
     // Calculate the reflection using the normal vector
     const bounce = calculateBounce(direction.dx, direction.dy, nx, ny);
     
-    // Apply a slight energy preservation on bounce (DVD-like)
-    const preservationFactor = 1.0; // Keep exact same speed after bounce
+    // Apply a strict preservation factor for DVD-like movement (no speed loss)
+    const preservationFactor = 1.0;
     newDirection = {
       dx: bounce.dx * preservationFactor,
       dy: bounce.dy * preservationFactor
@@ -70,7 +69,6 @@ export const animateTargetFrame = (
     finalY = centerY + safeDistance * ny;
   }
   
-  // Ensure we're returning updated position
   return { 
     newPosition: { x: finalX, y: finalY },
     newDirection: didBounce ? newDirection : undefined,
