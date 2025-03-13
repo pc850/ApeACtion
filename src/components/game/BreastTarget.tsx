@@ -1,0 +1,36 @@
+
+import { Target } from 'lucide-react';
+import { Position } from '@/hooks/useClickGame';
+
+interface BreastTargetProps {
+  position: Position;
+  size: number;
+  onClick: (e: React.MouseEvent) => void;
+}
+
+const BreastTarget = ({ position, size, onClick }: BreastTargetProps) => {
+  return (
+    <div
+      onClick={onClick}
+      className="absolute rounded-full bg-[#FFDEE2] cursor-pointer hover:scale-105 transition-transform z-10 animate-pulse"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        width: `${size}px`,
+        height: `${size}px`,
+        transform: 'translate(-50%, -50%)',
+        boxShadow: '0 0 10px rgba(217, 70, 239, 0.5)',
+      }}
+    >
+      {/* Inner circle for nipple effect */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#D946EF]" />
+      
+      {/* Target indicator */}
+      <div className="absolute -top-1 -right-1">
+        <Target className="w-4 h-4 text-primary animate-pulse" />
+      </div>
+    </div>
+  );
+};
+
+export default BreastTarget;
