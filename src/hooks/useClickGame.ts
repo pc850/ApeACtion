@@ -38,7 +38,10 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
   const interactions = useGameInteractions({
     containerRef,
     mainCircleRef,
-    gameState,
+    gameState: {
+      ...gameState,
+      direction: gameState.direction // Make sure direction is passed
+    },
     animationControls: {
       ...animationControls,
       animationRef
@@ -71,7 +74,8 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       consecutiveClicks: gameState.consecutiveClicks,
       lastClickTime: gameState.lastClickTime,
       scale: gameState.scale,
-      currentLevel: gameState.currentLevel
+      currentLevel: gameState.currentLevel,
+      direction: gameState.direction // Include direction in returned state
     },
     gameConfig: gameState.gameConfig,
     currentLevelConfig,

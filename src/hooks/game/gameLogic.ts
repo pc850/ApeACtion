@@ -71,7 +71,9 @@ export const handleTargetClick = (
   setTargetPosition: Dispatch<SetStateAction<Position>>,
   mainCircleRef: RefObject<HTMLDivElement>,
   animationRef: RefObject<number | null>,
-  animateTarget: () => void
+  animateTarget: () => void,
+  direction: { dx: number; dy: number },
+  setDirection: Dispatch<SetStateAction<{ dx: number; dy: number }>>
 ) => {
   e.stopPropagation();
   
@@ -101,6 +103,12 @@ export const handleTargetClick = (
   setRoundScore(prev => prev + tokensEarned);
   addTokens(tokensEarned);
   setTargetsHit(prev => prev + 1);
+  
+  // Reverse the direction when the target is clicked
+  setDirection({
+    dx: -direction.dx,
+    dy: -direction.dy
+  });
   
   // Check if level is complete
   if (targetsHit + 1 >= levelConfig.targetsRequired) {

@@ -28,6 +28,7 @@ interface UseGameInteractionsProps {
     currentLevel: number;
     setCurrentLevel: React.Dispatch<React.SetStateAction<number>>;
     getCurrentLevelConfig: () => any;
+    direction: { dx: number; dy: number }; // Added direction to GameState
   };
   animationControls: {
     scheduleDirectionChange: () => void;
@@ -89,7 +90,9 @@ export const useGameInteractions = ({
       gameState.setTargetPosition,
       mainCircleRef,
       animationControls.animationRef,
-      animationControls.animateTarget
+      animationControls.animateTarget,
+      gameState.direction,  // Pass current direction
+      gameState.setDirection // Pass setter for direction
     );
   };
   
