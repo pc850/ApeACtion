@@ -1,16 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { useTokens } from '@/context/TokenContext';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { CoinsIcon, UserIcon, HistoryIcon, SettingsIcon, MessageCircleIcon } from 'lucide-react';
+import { CoinsIcon, UserIcon, HistoryIcon, SettingsIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Profile = () => {
   const { tokens } = useTokens();
-  const { walletAddress, telegramUsername } = useAuth();
   const [joinDate] = useState(new Date());
   
   // Mock data for token history
@@ -36,12 +34,6 @@ const Profile = () => {
     });
   };
   
-  // Format wallet address
-  const formatWalletAddress = (address: string | null) => {
-    if (!address) return 'Not connected';
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-  };
-  
   return (
     <div className="container mx-auto p-4 page-transition">
       <div className="max-w-4xl mx-auto">
@@ -58,18 +50,8 @@ const Profile = () => {
                 <UserIcon className="w-12 h-12 text-primary" />
               </div>
               
-              {telegramUsername ? (
-                <div className="flex items-center mb-2">
-                  <MessageCircleIcon className="h-4 w-4 mr-2 text-blue-500" />
-                  <span className="text-lg font-medium">@{telegramUsername}</span>
-                </div>
-              ) : null}
-              
               <div className="mb-4 text-center">
-                <h2 className="text-xl font-semibold">Wallet</h2>
-                <p className="text-sm text-muted-foreground font-mono">
-                  {formatWalletAddress(walletAddress)}
-                </p>
+                <h2 className="text-xl font-semibold">User</h2>
                 <p className="text-sm text-muted-foreground mt-2">
                   Joined: {formatDate(joinDate)}
                 </p>
