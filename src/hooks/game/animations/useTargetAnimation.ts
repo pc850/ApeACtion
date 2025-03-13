@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from 'react';
 import { Position } from '../types';
 import { generateRandomDirection } from '../animationUtils';
@@ -78,7 +77,8 @@ export const useTargetAnimation = ({
     getCurrentLevelConfig,
     gameConfig,
     speedMultiplier,
-    currentLevel
+    currentLevel,
+    roundsCompleted
   );
   
   // The main animation function

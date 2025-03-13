@@ -97,7 +97,8 @@ export const createStallDetector = (
   getCurrentLevelConfig: () => any,
   gameConfig: { animationSpeed: number },
   speedMultiplier: number,
-  currentLevel: number
+  currentLevel: number,
+  roundsCompleted: number
 ) => {
   let stallDetectionInterval: NodeJS.Timeout | null = null;
   const lastPositionRef = { current: { x: 0, y: 0 } };
