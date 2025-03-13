@@ -9,10 +9,15 @@ interface BreastTargetProps {
 }
 
 const BreastTarget = ({ position, size, onClick }: BreastTargetProps) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling to parent elements
+    onClick(e);
+  };
+
   return (
     <div
-      onClick={onClick}
-      className="absolute rounded-full bg-[#FFDEE2] cursor-pointer hover:scale-105 transition-transform z-10 animate-pulse"
+      onClick={handleClick}
+      className="absolute rounded-full bg-[#FFDEE2] cursor-pointer hover:scale-105 transition-transform z-20 animate-pulse"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,

@@ -32,7 +32,7 @@ const MainCircle = ({
       className={cn(
         "relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden cursor-pointer",
         "clickable-element shadow-xl",
-        roundActive && "pointer-events-none opacity-90"
+        roundActive ? "pointer-events-auto" : ""
       )}
       style={{ 
         transform: `scale(${scale})`,

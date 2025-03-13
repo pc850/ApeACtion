@@ -109,6 +109,9 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       if (changeDirectionTimer) {
         clearTimeout(changeDirectionTimer);
       }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
     };
   }, [changeDirectionTimer]);
   
@@ -153,9 +156,7 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       return { x: newX, y: newY };
     });
     
-    if (roundActive && showTarget) {
-      animationRef.current = requestAnimationFrame(animateTarget);
-    }
+    animationRef.current = requestAnimationFrame(animateTarget);
   };
   
   // Start a new round of the game
@@ -177,26 +178,29 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     animationRef.current = requestAnimationFrame(animateTarget);
   };
   
-  // Clean up animation on component unmount
-  useEffect(() => {
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, []);
-  
   // Start animation when target becomes visible
   useEffect(() => {
     if (showTarget && roundActive) {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       animationRef.current = requestAnimationFrame(animateTarget);
     }
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [showTarget, roundActive]);
   
   // Handle clicking on the breast target
   const handleTargetClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Cancel animation frame
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
     
     // Update scores
     const now = Date.now();
@@ -236,11 +240,6 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     // Check if round is complete
     if (targetsHit + 1 >= gameConfig.maxTargets) {
       // Round complete!
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      
       if (changeDirectionTimer) {
         clearTimeout(changeDirectionTimer);
       }
@@ -253,6 +252,9 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       setTimeout(() => {
         setTargetPosition(generateRandomPosition());
         setShowTarget(true);
+        // Restart animation for the new target
+        if (animationRef.current) cancelAnimationFrame(animationRef.current);
+        animationRef.current = requestAnimationFrame(animateTarget);
       }, 300);
     }
   };
