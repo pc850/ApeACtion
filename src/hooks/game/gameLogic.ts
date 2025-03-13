@@ -104,11 +104,32 @@ export const handleTargetClick = (
   addTokens(tokensEarned);
   setTargetsHit(prev => prev + 1);
   
-  // Reverse the direction when the target is clicked
-  setDirection({
-    dx: -direction.dx,
-    dy: -direction.dy
-  });
+  // When target is clicked, move it to the opposite side of the circle
+  if (mainCircleRef.current) {
+    const mainCircle = mainCircleRef.current.getBoundingClientRect();
+    const centerX = mainCircle.width / 2;
+    const centerY = mainCircle.height / 2;
+    
+    // Calculate vector from center to current position
+    const dirX = direction.dx;
+    const dirY = direction.dy;
+    
+    // Set direction to opposite (exactly reversed)
+    setDirection({
+      dx: -dirX,
+      dy: -dirY
+    });
+    
+    // Get a new position at the opposite end of the circle
+    const radius = (mainCircle.width / 2) * 0.7;
+    const angle = Math.atan2(dirY, dirX) + Math.PI; // Add PI to get opposite angle
+    
+    // Set new position at opposite side of circle
+    const newX = centerX + Math.cos(angle) * radius * 0.9;
+    const newY = centerY + Math.sin(angle) * radius * 0.9;
+    
+    setTargetPosition({ x: newX, y: newY });
+  }
   
   // Check if level is complete
   if (targetsHit + 1 >= levelConfig.targetsRequired) {
@@ -145,17 +166,12 @@ export const handleTargetClick = (
     // Increase the speed multiplier for the next target
     setSpeedMultiplier(prev => prev + 0.1); // Reduced speed increment
     
-    // Spawn a new target after a shorter delay
-    setTimeout(() => {
-      setTargetPosition(generateRandomPosition(mainCircleRef));
-      
-      // Ensure animation continues
-      if (animationRef.current !== null) {
-        cancelAnimationFrame(animationRef.current);
-      }
-      // Call animateTarget which will set the ref internally
-      animateTarget();
-    }, 100); // Even shorter delay for faster gameplay
+    // Ensure animation continues with the new direction and position
+    if (animationRef.current !== null) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    // Restart animation
+    animateTarget();
   }
 };
 

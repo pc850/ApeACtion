@@ -17,7 +17,7 @@ export const animateTargetFrame = (
   targetSize: number,
   currentLevel: number,
   roundsCompleted: number,
-  jitterFactor: number = 0.1  // Reduced jitter for smoother motion
+  jitterFactor: number = 0  // Remove jitter completely for perfect DVD-like movement
 ): {
   newPosition: Position;
   newDirection?: { dx: number; dy: number };
