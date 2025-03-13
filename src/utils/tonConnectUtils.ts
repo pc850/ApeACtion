@@ -29,7 +29,7 @@ const protocol = "https";
 const domain = "kkddzgpenchcqjxyehep.supabase.co";
 const path = "/manifest.json";
 // Construct the URL in a way that TypeScript recognizes as `${string}://${string}`
-const manifestUrl = `${protocol}://${domain}` as `${string}://${string}`;
+const manifestUrl = `${protocol}://${domain}${path}` as `${string}://${string}`;
 
 export const tonConnectUI = new TonConnectUI({
   manifestUrl: manifestUrl,
