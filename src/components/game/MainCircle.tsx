@@ -30,7 +30,7 @@ const MainCircle = ({
       ref={mainCircleRef}
       onClick={onCircleClick}
       className={cn(
-        "relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden cursor-pointer",
+        "relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-visible cursor-pointer",
         "clickable-element shadow-xl",
         roundActive ? "pointer-events-auto" : ""
       )}

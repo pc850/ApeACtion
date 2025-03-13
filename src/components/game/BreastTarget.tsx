@@ -17,7 +17,7 @@ const BreastTarget = ({ position, size, onClick }: BreastTargetProps) => {
   return (
     <div
       onClick={handleClick}
-      className="absolute rounded-full bg-[#FFDEE2] cursor-pointer hover:scale-105 transition-transform z-20 animate-pulse"
+      className="absolute rounded-full bg-[#FFDEE2] cursor-pointer hover:scale-105 transition-transform z-50"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -49,6 +49,18 @@ const BreastTarget = ({ position, size, onClick }: BreastTargetProps) => {
           top: `${size * 0.2}px`,
           left: `${size * 0.2}px`,
           opacity: 0.3
+        }}
+      />
+      
+      {/* Secondary highlight for more dimension */}
+      <div 
+        className="absolute rounded-full bg-white" 
+        style={{
+          width: `${size * 0.1}px`,
+          height: `${size * 0.1}px`,
+          top: `${size * 0.5}px`,
+          left: `${size * 0.6}px`,
+          opacity: 0.2
         }}
       />
       

@@ -168,6 +168,7 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       return { x: newX, y: newY };
     });
     
+    // Ensure animation continues to run by immediately requesting next frame
     animationRef.current = requestAnimationFrame(animateTarget);
   };
   
@@ -193,7 +194,7 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     animationRef.current = requestAnimationFrame(animateTarget);
   };
   
-  // Start animation when target becomes visible
+  // Start animation when target becomes visible or when round is active
   useEffect(() => {
     if (showTarget && roundActive) {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -210,9 +211,6 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
   // Handle clicking on the breast target
   const handleTargetClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    // Don't cancel animation frame, let it continue running
-    // This keeps the target moving even during click handling
     
     // Update scores
     const now = Date.now();
@@ -248,8 +246,6 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     
     // Check if round is complete
     if (targetsHit + 1 >= gameConfig.maxTargets) {
-      // Don't stop direction changes
-      
       // Increase rounds completed counter
       setRoundsCompleted(prev => prev + 1);
       
@@ -264,7 +260,9 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
         // Generate a new position for the target
         setTargetPosition(generateRandomPosition());
         
-        // No need to cancel animation - it continues running
+        // Keep animation running - important!
+        if (animationRef.current) cancelAnimationFrame(animationRef.current);
+        animationRef.current = requestAnimationFrame(animateTarget);
       }, 300);
     } else {
       // Increase the speed multiplier for the next target
@@ -273,7 +271,10 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       // Spawn a new target after a short delay
       setTimeout(() => {
         setTargetPosition(generateRandomPosition());
-        // Target stays visible, animation keeps running
+        
+        // Ensure animation continues - critical for movement
+        if (animationRef.current) cancelAnimationFrame(animationRef.current);
+        animationRef.current = requestAnimationFrame(animateTarget);
       }, 200); // Reduced delay for faster gameplay
     }
   };
