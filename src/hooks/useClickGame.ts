@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { createFloatingNumber } from '@/lib/animations';
@@ -42,6 +41,7 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
   const [changeDirectionTimer, setChangeDirectionTimer] = useState<NodeJS.Timeout | null>(null);
   const animationRef = useRef<number | null>(null);
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
+  const [roundsCompleted, setRoundsCompleted] = useState(0);
   
   const gameConfig: GameConfig = {
     maxTargets: 5, // User requested 5 targets per round
@@ -83,9 +83,11 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
   // Generate a random movement direction
   const generateRandomDirection = () => {
     const angle = Math.random() * 2 * Math.PI;
+    // Increase speed based on rounds completed
+    const currentSpeed = gameConfig.animationSpeed * speedMultiplier * (1 + (roundsCompleted * 0.2));
     return {
-      dx: Math.cos(angle) * gameConfig.animationSpeed * speedMultiplier,
-      dy: Math.sin(angle) * gameConfig.animationSpeed * speedMultiplier
+      dx: Math.cos(angle) * currentSpeed,
+      dy: Math.sin(angle) * currentSpeed
     };
   };
   
@@ -97,10 +99,12 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     }
     
     // Set a new timer to change direction randomly
+    // Make direction changes more frequent as rounds increase
+    const changeInterval = Math.max(300, 1000 - (roundsCompleted * 100));
     const timer = setTimeout(() => {
       setDirection(generateRandomDirection());
       scheduleDirectionChange(); // Schedule the next change
-    }, 1000 + Math.random() * 2000); // Change direction every 1-3 seconds
+    }, changeInterval + Math.random() * 1000); // Change direction more frequently as game progresses
     
     setChangeDirectionTimer(timer);
   };
@@ -117,19 +121,24 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     };
   }, [changeDirectionTimer]);
   
-  // Animate the target with the current direction
+  // Animate the target with the current direction - make it more erratic
   const animateTarget = () => {
-    if (!mainCircleRef.current || !showTarget || !roundActive) return;
+    if (!mainCircleRef.current || !roundActive) return;
     
     const mainCircle = mainCircleRef.current.getBoundingClientRect();
     const centerX = mainCircle.width / 2;
     const centerY = mainCircle.height / 2;
     const radius = (mainCircle.width / 2) * 0.8 - (gameConfig.targetSize / 2); // Adjust for target size
     
+    // Add some random jitter to the movement for higher difficulties
+    const jitterFactor = Math.min(0.5, roundsCompleted * 0.1);
+    const jitterX = (Math.random() * 2 - 1) * jitterFactor;
+    const jitterY = (Math.random() * 2 - 1) * jitterFactor;
+    
     setTargetPosition(prev => {
-      // Calculate new position
-      let newX = prev.x + direction.dx;
-      let newY = prev.y + direction.dy;
+      // Calculate new position with jitter
+      let newX = prev.x + direction.dx + jitterX;
+      let newY = prev.y + direction.dy + jitterY;
       
       // Calculate distance from center
       const dx = newX - centerX;
@@ -141,10 +150,11 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
         // Calculate the angle of the current position
         const angle = Math.atan2(dy, dx);
         
-        // Create a new direction that bounces back
+        // Create a new direction that bounces back - more chaotic at higher difficulty
+        const bounceRandomness = Math.min(0.4, roundsCompleted * 0.05);
         const newDirection = {
-          dx: -direction.dx,
-          dy: -direction.dy
+          dx: -direction.dx * (1 + (Math.random() * bounceRandomness - bounceRandomness/2)),
+          dy: -direction.dy * (1 + (Math.random() * bounceRandomness - bounceRandomness/2))
         };
         
         // Update the direction
@@ -166,7 +176,9 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     setRoundActive(true);
     setTargetsHit(0);
     setRoundScore(0);
-    setSpeedMultiplier(1); // Reset speed multiplier at the start of each round
+    
+    // Set initial speed based on rounds completed
+    setSpeedMultiplier(1 + (roundsCompleted * 0.3));
     
     // Generate initial direction and position
     setDirection(generateRandomDirection());
@@ -199,11 +211,8 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
   const handleTargetClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Cancel animation frame
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
-    }
+    // Don't cancel animation frame, let it continue running
+    // This keeps the target moving even during click handling
     
     // Update scores
     const now = Date.now();
@@ -237,19 +246,26 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
     addTokens(tokensEarned);
     setTargetsHit(prev => prev + 1);
     
-    // Hide the current target
-    setShowTarget(false);
-    
     // Check if round is complete
     if (targetsHit + 1 >= gameConfig.maxTargets) {
-      // Round complete!
-      if (changeDirectionTimer) {
-        clearTimeout(changeDirectionTimer);
-      }
+      // Don't stop direction changes
       
+      // Increase rounds completed counter
+      setRoundsCompleted(prev => prev + 1);
+      
+      // Don't end the round, just reset targets hit and show a new target
       setTimeout(() => {
-        setRoundActive(false);
-      }, 500);
+        // Reset targets hit but keep the round active
+        setTargetsHit(0);
+        
+        // Increase speed for the next round
+        setSpeedMultiplier(prev => prev + 0.5);
+        
+        // Generate a new position for the target
+        setTargetPosition(generateRandomPosition());
+        
+        // No need to cancel animation - it continues running
+      }, 300);
     } else {
       // Increase the speed multiplier for the next target
       setSpeedMultiplier(prev => prev + 0.3);
@@ -257,11 +273,8 @@ export const useClickGame = (containerRef: React.RefObject<HTMLDivElement>, main
       // Spawn a new target after a short delay
       setTimeout(() => {
         setTargetPosition(generateRandomPosition());
-        setShowTarget(true);
-        // Restart animation for the new target
-        if (animationRef.current) cancelAnimationFrame(animationRef.current);
-        animationRef.current = requestAnimationFrame(animateTarget);
-      }, 300);
+        // Target stays visible, animation keeps running
+      }, 200); // Reduced delay for faster gameplay
     }
   };
   

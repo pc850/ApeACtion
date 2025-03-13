@@ -27,7 +27,7 @@ const ClickToEarn = () => {
         <h1 className="text-3xl font-bold mb-1">Click & Earn Tokens</h1>
         <p className="text-muted-foreground">
           {gameState.roundActive 
-            ? `Hit ${gameConfig.maxTargets - gameState.targetsHit} more breast${gameConfig.maxTargets - gameState.targetsHit !== 1 ? "s" : ""} to complete the round!` 
+            ? `Hit ${gameConfig.maxTargets - gameState.targetsHit} more breast${gameConfig.maxTargets - gameState.targetsHit !== 1 ? "s" : ""} to complete this level!` 
             : "Tap the circle below to start!"
           }
         </p>
@@ -57,7 +57,7 @@ const ClickToEarn = () => {
         <p>
           <span className="font-semibold text-xl">
             {gameState.roundActive 
-              ? "Click the moving breast target!" 
+              ? "Click the moving breast target! It gets faster with each round!" 
               : "Tap to start a round!"
             }
           </span>
