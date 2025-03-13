@@ -3,8 +3,7 @@ import { Position } from '../types';
 import { 
   generateRandomDirection, 
   calculateBounce, 
-  ensureMinimumSpeed, 
-  applyRandomAcceleration 
+  ensureMinimumSpeed
 } from '../animationUtils';
 
 // Add a padding value to prevent edge glitches
@@ -34,8 +33,8 @@ export const animateTargetFrame = (
   const radius = (mainCircle.width / 2) * 0.85 - (targetSize / 2) - EDGE_PADDING;
   
   // Calculate new position with a constant, predictable movement (DVD-like)
-  let newX = targetPosition.x + direction.dx;
-  let newY = targetPosition.y + direction.dy;
+  const newX = targetPosition.x + direction.dx;
+  const newY = targetPosition.y + direction.dy;
   
   // Calculate distance from center
   const dx = newX - centerX;
@@ -44,9 +43,13 @@ export const animateTargetFrame = (
   
   let newDirection = { ...direction };
   let didBounce = false;
+  let finalX = newX;
+  let finalY = newY;
   
   // If target would go outside the circle, bounce it back like DVD logo
   if (distance > radius) {
+    didBounce = true;
+    
     // Calculate the normal vector to the circle at the point of intersection
     const nx = dx / distance;
     const ny = dy / distance;
@@ -63,15 +66,14 @@ export const animateTargetFrame = (
     
     // Place the target exactly at the edge of the valid area
     const safeDistance = radius - 1;
-    newX = centerX + safeDistance * nx;
-    newY = centerY + safeDistance * ny;
-    
-    didBounce = true;
+    finalX = centerX + safeDistance * nx;
+    finalY = centerY + safeDistance * ny;
   }
   
+  // Ensure we're returning updated position
   return { 
-    newPosition: { x: newX, y: newY },
-    newDirection,
+    newPosition: { x: finalX, y: finalY },
+    newDirection: didBounce ? newDirection : undefined,
     didBounce
   };
 };

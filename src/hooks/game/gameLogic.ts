@@ -34,7 +34,9 @@ export const startRound = (
   setSpeedMultiplier(baseSpeedMultiplier);
   
   // Generate initial direction and position with level-based velocity
-  setDirection(generateRandomDirection(baseSpeedMultiplier, roundsCompleted));
+  // Ensure we have a meaningful direction vector with good speed
+  const initialDirection = generateRandomDirection(baseSpeedMultiplier, roundsCompleted);
+  setDirection(initialDirection);
   setTargetPosition(generateRandomPosition(mainCircleRef));
   setShowTarget(true);
   

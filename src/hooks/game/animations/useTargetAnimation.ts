@@ -84,7 +84,7 @@ export const useTargetAnimation = ({
   
   // The main animation function
   const animateTarget = () => {
-    if (!mainCircleRef.current || !roundActive) return;
+    if (!mainCircleRef.current || !roundActive || !showTarget) return;
     
     // Get current level config
     const levelConfig = getCurrentLevelConfig();
@@ -120,6 +120,13 @@ export const useTargetAnimation = ({
   useEffect(() => {
     if (showTarget && roundActive) {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      
+      // Initialize with a random direction if not already set
+      if (direction.dx === 0 && direction.dy === 0) {
+        setDirection(generateRandomDirection(speedMultiplier, roundsCompleted));
+      }
+      
+      // Start the animation
       animationRef.current = requestAnimationFrame(animateTarget);
       
       // Start direction change scheduling
@@ -139,7 +146,7 @@ export const useTargetAnimation = ({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [showTarget, roundActive]);
+  }, [showTarget, roundActive, direction, speedMultiplier]);
 
   // Clean up all timers
   useEffect(() => {
