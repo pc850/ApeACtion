@@ -1,4 +1,3 @@
-
 import { Dispatch, SetStateAction, RefObject } from 'react';
 import { Position, GameConfig, LevelConfig } from './types';
 import { generateRandomPosition, generateRandomDirection } from './animationUtils';
@@ -30,7 +29,7 @@ export const startRound = (
   const levelConfig = getCurrentLevelConfig();
   
   // Set initial speed based on level and rounds completed for added difficulty
-  const baseSpeedMultiplier = levelConfig.speedMultiplier + (roundsCompleted * 0.1);
+  const baseSpeedMultiplier = levelConfig.speedMultiplier + (roundsCompleted * 0.05); // Reduced incremental difficulty
   setSpeedMultiplier(baseSpeedMultiplier);
   
   // Generate initial direction and position with level-based velocity
@@ -136,7 +135,7 @@ export const handleTargetClick = (
     }, 100); // Short delay for faster gameplay
   } else {
     // Increase the speed multiplier for the next target
-    setSpeedMultiplier(prev => prev + 0.3);
+    setSpeedMultiplier(prev => prev + 0.1); // Reduced speed increment
     
     // Spawn a new target after a shorter delay
     setTimeout(() => {

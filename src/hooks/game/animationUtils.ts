@@ -1,4 +1,3 @@
-
 import { Position } from './types';
 
 // Function to generate a random position within the main circle
@@ -25,9 +24,8 @@ export const generateRandomPosition = (mainCircleRef: React.RefObject<HTMLDivEle
 // Generate a random movement direction with proper velocity
 export const generateRandomDirection = (speedMultiplier: number, roundsCompleted: number) => {
   const angle = Math.random() * 2 * Math.PI;
-  // Set a clear visible speed for DVD-like movement
-  // Using fixed speeds in different directions for more predictable movement
-  const baseSpeed = 2 + (Math.min(roundsCompleted, 10) * 0.2); 
+  // Reduce the base speed for more manageable movement
+  const baseSpeed = 1 + (Math.min(roundsCompleted, 10) * 0.1); 
   const speed = baseSpeed * speedMultiplier;
   
   return {

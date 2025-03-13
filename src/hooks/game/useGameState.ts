@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Position, GameState, GameConfig } from './types';
 import { generateRandomPosition, generateRandomDirection } from './animationUtils';
@@ -23,41 +22,41 @@ export const useGameState = (mainCircleRef: React.RefObject<HTMLDivElement>) => 
   // Game configuration with multiple levels
   const gameConfig: GameConfig = {
     maxTargets: 5, // Base targets per round
-    animationSpeed: 20, // Base speed
+    animationSpeed: 10, // Reduced base speed
     targetSize: 48, // Base size of the breast target in pixels
     levels: [
       {
         level: 1,
         targetsRequired: 5,
-        speedMultiplier: 1.0,
+        speedMultiplier: 0.6, // Reduced speed multiplier
         targetSize: 48,
         description: "Beginner - Slow moving targets"
       },
       {
         level: 2,
         targetsRequired: 7,
-        speedMultiplier: 1.5,
+        speedMultiplier: 0.8, // Reduced speed multiplier
         targetSize: 42,
         description: "Intermediate - Faster & smaller targets"
       },
       {
         level: 3,
         targetsRequired: 10,
-        speedMultiplier: 2.0,
+        speedMultiplier: 1.0, // Reduced speed multiplier
         targetSize: 38,
         description: "Advanced - Fast & small targets"
       },
       {
         level: 4,
         targetsRequired: 12,
-        speedMultiplier: 2.5,
+        speedMultiplier: 1.2, // Reduced speed multiplier
         targetSize: 34,
         description: "Expert - Very fast & tiny targets"
       },
       {
         level: 5,
         targetsRequired: 15,
-        speedMultiplier: 3.0,
+        speedMultiplier: 1.5, // Reduced speed multiplier
         targetSize: 30,
         description: "Master - Extreme speed challenge"
       }
