@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useTokens } from '@/context/TokenContext';
 import { createFloatingNumber } from '@/lib/animations';
@@ -26,12 +25,13 @@ const ClickToEarn = () => {
   const [targetPosition, setTargetPosition] = useState<Position>({ x: 0, y: 0 });
   const [showTarget, setShowTarget] = useState(false);
   const [roundScore, setRoundScore] = useState(0);
-  const [angle, setAngle] = useState(0);
+  const [direction, setDirection] = useState({ dx: 0, dy: 0 });
+  const [changeDirectionTimer, setChangeDirectionTimer] = useState<NodeJS.Timeout | null>(null);
   const animationRef = useRef<number | null>(null);
   
-  const MAX_TARGETS = 10;
-  const ANIMATION_SPEED = 0.02; // Controls speed of the target
-  const TARGET_SIZE = 50; // Size of the breast target in pixels
+  const MAX_TARGETS = 5; // User requested 5 targets per round
+  const ANIMATION_SPEED = 2; // Controls speed of the target in pixels per frame
+  const TARGET_SIZE = 48; // Size of the breast target in pixels
 
   // Reset consecutive clicks if user hasn't clicked for a while
   useEffect(() => {
@@ -44,31 +44,99 @@ const ClickToEarn = () => {
     return () => clearTimeout(resetTimer);
   }, [lastClickTime, consecutiveClicks]);
 
-  // Function to calculate the position of the breast target
-  const calculateTargetPosition = (angle: number): Position => {
+  // Generate a random position within the main circle
+  const generateRandomPosition = (): Position => {
     if (!mainCircleRef.current) return { x: 0, y: 0 };
 
     const mainCircle = mainCircleRef.current.getBoundingClientRect();
-    
-    // Circle properties
     const centerX = mainCircle.width / 2;
     const centerY = mainCircle.height / 2;
-    const radius = mainCircle.width / 2 + 30; // Position the target just outside the main circle
+    const radius = (mainCircle.width / 2) * 0.8; // Stay within 80% of the radius to avoid touching the edge
     
-    // Calculate position based on angle
-    const x = centerX + radius * Math.cos(angle);
-    const y = centerY + radius * Math.sin(angle);
+    // Generate random angle and distance from center (within the radius)
+    const angle = Math.random() * 2 * Math.PI;
+    const distance = Math.random() * radius;
+    
+    // Calculate position
+    const x = centerX + distance * Math.cos(angle);
+    const y = centerY + distance * Math.sin(angle);
     
     return { x, y };
   };
   
-  // Animate the target moving in a circular path
+  // Generate a random movement direction
+  const generateRandomDirection = () => {
+    const angle = Math.random() * 2 * Math.PI;
+    return {
+      dx: Math.cos(angle) * ANIMATION_SPEED,
+      dy: Math.sin(angle) * ANIMATION_SPEED
+    };
+  };
+  
+  // Schedule periodic direction changes
+  const scheduleDirectionChange = () => {
+    // Clear any existing timer
+    if (changeDirectionTimer) {
+      clearTimeout(changeDirectionTimer);
+    }
+    
+    // Set a new timer to change direction randomly
+    const timer = setTimeout(() => {
+      setDirection(generateRandomDirection());
+      scheduleDirectionChange(); // Schedule the next change
+    }, 1000 + Math.random() * 2000); // Change direction every 1-3 seconds
+    
+    setChangeDirectionTimer(timer);
+  };
+  
+  // Clean up the direction change timer
+  useEffect(() => {
+    return () => {
+      if (changeDirectionTimer) {
+        clearTimeout(changeDirectionTimer);
+      }
+    };
+  }, [changeDirectionTimer]);
+  
+  // Animate the target with the current direction
   const animateTarget = () => {
-    setAngle(prevAngle => {
-      const newAngle = prevAngle + ANIMATION_SPEED;
-      const newPosition = calculateTargetPosition(newAngle);
-      setTargetPosition(newPosition);
-      return newAngle;
+    if (!mainCircleRef.current || !showTarget || !roundActive) return;
+    
+    const mainCircle = mainCircleRef.current.getBoundingClientRect();
+    const centerX = mainCircle.width / 2;
+    const centerY = mainCircle.height / 2;
+    const radius = (mainCircle.width / 2) * 0.8 - (TARGET_SIZE / 2); // Adjust for target size
+    
+    setTargetPosition(prev => {
+      // Calculate new position
+      let newX = prev.x + direction.dx;
+      let newY = prev.y + direction.dy;
+      
+      // Calculate distance from center
+      const dx = newX - centerX;
+      const dy = newY - centerY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // If target would go outside the circle, bounce it back
+      if (distance > radius) {
+        // Calculate the angle of the current position
+        const angle = Math.atan2(dy, dx);
+        
+        // Create a new direction that bounces back
+        const newDirection = {
+          dx: -direction.dx,
+          dy: -direction.dy
+        };
+        
+        // Update the direction
+        setDirection(newDirection);
+        
+        // Keep the target within the circle
+        newX = centerX + (radius - 2) * Math.cos(angle);
+        newY = centerY + (radius - 2) * Math.sin(angle);
+      }
+      
+      return { x: newX, y: newY };
     });
     
     if (roundActive && showTarget) {
@@ -81,8 +149,14 @@ const ClickToEarn = () => {
     setRoundActive(true);
     setTargetsHit(0);
     setRoundScore(0);
-    setAngle(Math.random() * 2 * Math.PI); // Random starting angle
+    
+    // Generate initial direction and position
+    setDirection(generateRandomDirection());
+    setTargetPosition(generateRandomPosition());
     setShowTarget(true);
+    
+    // Schedule direction changes
+    scheduleDirectionChange();
     
     // Start the animation
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -142,18 +216,30 @@ const ClickToEarn = () => {
     addTokens(tokensEarned);
     setTargetsHit(prev => prev + 1);
     
+    // Hide the current target
+    setShowTarget(false);
+    
     // Check if round is complete
     if (targetsHit + 1 >= MAX_TARGETS) {
       // Round complete!
-      setShowTarget(false);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
       }
       
+      if (changeDirectionTimer) {
+        clearTimeout(changeDirectionTimer);
+      }
+      
       setTimeout(() => {
         setRoundActive(false);
       }, 500);
+    } else {
+      // Spawn a new target after a short delay
+      setTimeout(() => {
+        setTargetPosition(generateRandomPosition());
+        setShowTarget(true);
+      }, 300);
     }
   };
   
@@ -194,7 +280,7 @@ const ClickToEarn = () => {
         <h1 className="text-3xl font-bold mb-1">Click & Earn Tokens</h1>
         <p className="text-muted-foreground">
           {roundActive 
-            ? "Click the moving breast to earn tokens!" 
+            ? `Hit ${MAX_TARGETS - targetsHit} more breast${MAX_TARGETS - targetsHit !== 1 ? "s" : ""} to complete the round!` 
             : "Tap the circle below to start!"
           }
         </p>
@@ -231,34 +317,34 @@ const ClickToEarn = () => {
           <CircleUser className="w-32 h-32 text-white/80" />
         </div>
         
+        {/* Breast Target */}
+        {showTarget && roundActive && (
+          <div
+            onClick={handleTargetClick}
+            className="absolute w-12 h-12 rounded-full bg-[#FFDEE2] cursor-pointer hover:scale-105 transition-transform z-10 animate-pulse"
+            style={{
+              left: `${targetPosition.x}px`,
+              top: `${targetPosition.y}px`,
+              transform: 'translate(-50%, -50%)',
+              boxShadow: '0 0 10px rgba(217, 70, 239, 0.5)',
+            }}
+          >
+            {/* Inner circle for nipple effect */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#D946EF]" />
+            
+            {/* Target indicator */}
+            <div className="absolute -top-1 -right-1">
+              <Target className="w-4 h-4 text-primary animate-pulse" />
+            </div>
+          </div>
+        )}
+        
         {/* Pulsing Effect */}
         <div className="absolute inset-0 rounded-full bg-primary/20 animate-pulse-soft pointer-events-none" />
         
         {/* Glow Effect */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/30 to-transparent opacity-70 pointer-events-none" />
       </div>
-      
-      {/* Breast Target */}
-      {showTarget && roundActive && (
-        <div
-          onClick={handleTargetClick}
-          className="absolute w-12 h-12 rounded-full bg-[#FFDEE2] cursor-pointer hover:scale-105 transition-transform z-10 animate-pulse"
-          style={{
-            left: `${targetPosition.x}px`,
-            top: `${targetPosition.y}px`,
-            transform: 'translate(-50%, -50%)',
-            boxShadow: '0 0 10px rgba(217, 70, 239, 0.5)',
-          }}
-        >
-          {/* Inner circle for nipple effect */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#D946EF]" />
-          
-          {/* Target indicator */}
-          <div className="absolute -top-1 -right-1">
-            <Target className="w-4 h-4 text-primary animate-pulse" />
-          </div>
-        </div>
-      )}
       
       <div className="mt-8 text-center text-lg">
         <p>
